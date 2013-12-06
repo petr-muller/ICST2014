@@ -375,8 +375,73 @@ D-Bus, fuzzer, fuzzing, testing, automation, pseudo-random data generation, IPC
 \addtodo{Zbezne popsat co je DBus a jakou hraje roli v Linuxu}
 \addtodo{Popsat problem co resime a jeho vyznam}
 \addtodo{Pozor, reviewers nemusi byt linux experti}
-\dummytext
-\dummytext
+
+Testing is used to~find bugs~(errors or other defects) in~software. By~finding bugs,
+testing also provides quality assurance of~software. Software testing can be stated
+as the~process of~validating and~verifying that a~computer software:
+\begin{itemize}
+	\item meets the~design and~development requirements,
+	\item works as expected,
+	\item is secure,
+	\item and~that bugs are not present.
+\end{itemize}
+
+Fuzzing is a~type of~testing where a~goal is to~find bugs in~software, preferably
+ones that have security implications. Fuzzing is automated, brute force technique
+of~testing and~it exploits the~fact that many bugs in~software are caused
+by~handling inputs from~a~user without applying validation routines on~that
+inputs. The~goal of~fuzz testing~(fuzzing) is to~crash an~application or a~protocol
+and~analyze the~results.
+
+The~term fuzzing was first used by~professor Barton Miller who used fuzzing to~test
+robustness of~UNIX applications in~1989~\cite{Fuzzing2}. Fuzzing is defined
+in~``Fuzzing: Brute Force Vulnerability Discovery''~\cite[p.~22]{Fuzzing} as
+``\emph{a~method for~discovering faults in~software by~providing unexpected
+input and~monitoring for~exceptions. It is typically an~automated or semiautomated
+process that involves repeatedly manipulating and~supplying data to~target software
+for~processing}''.
+Another definition~(from ``Fuzzing for~Software Security Testing and~Quality
+Assurance''~\cite[p.~1]{Fuzzing2}) says it is ``\emph{a~highly automated testing
+technique that covers numerous boundary cases using invalid data~(from~files,
+network protocols, API calls, and~other targets) as application input to~better
+ensure the~absence of~exploitable vulnerabilities. The~name comes~from modem
+applications tendency to~fail due to~random input caused by~line noise on~`fuzzy'
+telephone lines}''.
+
+Fuzzing is close to~the~boundary value analysis, where you create test values that
+infringe the~boundary of~known good and~bad values. Fuzzing is very effective
+because many exploitable vulnerabilities are caused by~applications accepting
+user input and~processing that data without applying validation
+routines~\cite{Fuzzing}.
+
+Computers use protocols in~all aspects of~internal and~external communication.
+Protocols represent a~structure for~data transfer and~processing with~defined
+syntax. Certain standards and~rules understood by~both sending and~receiving
+entities must be agreed on~to~communicate data in~meaningful way~\cite{Fuzzing}.
+Some protocols are designed to~be human readable and~are represented in~plain
+text form. Other protocols are represented in~binary format.
+
+D-Bus is a~binary protocol and~a~message bus system providing applications
+a~simple way to~talk to~one another. D-Bus is ``\emph{a~system for~\mbox{inter-process}
+communication~(IPC) and~Remote Procedure Calling~(RPC) between
+processes running on the same machine and~makes it simple and~reliable to~code
+a~`single instance' application or daemon, and~to~launch applications and~daemons
+on~demand when their services are needed}''~\cite{DBUS}.
+
+D-Bus was created to~provide IPC system with a single, unified protocol
+and~currently, it is used as default IPC mechanism for~exhanging data between
+applications in~desktop environments as for~example GNOME, KDE or Xfce and~even
+Windows port exists. Besides desktop applications communication it is also used
+for~communicating between system applications and~user sessions.
+
+As D-Bus has become important part of~almost all GNU/Linux distribution there
+are more and~more applications which use it for~IPC. Fuzzing is ideal for~testing
+these applications as they have interfaces which contain callable methods
+with~input arguments. In~this paper we present the~Dfuzzer, tool for~fuzz
+testing D-Bus applications. It is capable to~test interfaces which applications
+export to~the~D-Bus. The~tool is focused on~finding bugs related to~memory leaks
+and~buffer overflows by~providing still expanding pseudo-random data and~boundary
+values to~applications inputs.
 
 \section{DBus message bus}
 \addtodo{Trochu detailneji popsat, co je dbus, ale neprehanet}
@@ -437,6 +502,18 @@ The authors would like to thank...
 \bibitem{IEEEhowto:kopka}
 H.~Kopka and P.~W. Daly, \emph{A Guide to \LaTeX}, 3rd~ed.\hskip 1em plus
   0.5em minus 0.4em\relax Harlow, England: Addison-Wesley, 1999.
+
+\bibitem{Fuzzing}
+Michael~Sutton and Adam~Greene and Pedram~Amini, \emph{Fuzzing: Brute Force
+Vulnerability Discovery}, Addison-Wesley Professional, 2007.
+
+\bibitem{Fuzzing2}
+Ari~Takanen and Jared~DeMott and Charlie~Miller, \emph{Fuzzing for~Software
+Security Testing and~Quality Assurance}, Artech House Print on~Demand, 2008.
+
+\bibitem{DBUS}
+Red Hat and the community, \emph{Software/dbus [online]}, freedesktop.org,
+2012-08-24 [cit. 2013-03-22], URL: \tt http://www.freedesktop.org/wiki/Software/dbus.
 
 \end{thebibliography}
 
