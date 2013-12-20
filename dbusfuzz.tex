@@ -774,9 +774,36 @@ only a~unique name within~the~session bus.
 \subsection{Limitations}
 \addtodo{Using bindings limiting the scope of invalid messages to send}
 
+\subsection{Project details}
+The Dfuzzer is written in C with source code publicly
+available\footnote{https://github.com/matusmarhefka/dfuzzer} under the GNU GENERAL
+PUBLIC LICENSE Version 3. The work on project was done within the bachelors thesis
+and is the result of cooperation between Red Hat and Faculty of Information
+Technology in Brno.
+
+The source code uses two important libraries: libffi and glib2.
+Libffi is a foreign function interface library. It provides a pointer to a function
+that can accept and decode any combination of arguments defined at run time.
+GLib2 is the low-level core library which provides data structure handling for C,
+portability wrappers, and interfaces for such runtime functionality as an event
+loop, threads, dynamic loading, and an object system. GLib2 also provides GDBus
+bindings, so applications do not have to be written in low-level D-Bus C library
+and instead use the high-level advantages of GDBus binding and data types from GLib2.
+
+
+
 \section{Results}
-\addtodo{Popsat nalezene chyby}
-\addtodo{Popsat nahled programatoru na tohle tema: "interni API" a najit presvedcive argumenty proc to neni pravda}
+Test results were divided into two stages -- the testing which took place during
+the development of the tool and the testing after the development. Testing during
+the development stage was very important as we wanted the tool to ``learn''
+to detect all possible options which may occure during testing phase. This
+includes detecting exceptions from D-Bus daemons, memory leaking of tested
+applications and most importantly applications crashes. To accomplish this task
+we have written the test service which exports connection name, object path,
+interface and one method to the D-Bus daemon. We introduced memory leaking
+and buffer overflows to this test service on purpose and were testing
+the Dfuzzer accuracy to detect those faults.
+
 \subsection{Testing during the development of the tool}
 During the development of the Dfuzzer it was used on randomly chosen applications.
 These were GNOME Shell, IMSettings and Evince.
