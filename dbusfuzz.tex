@@ -643,16 +643,68 @@ and~signature string~(signature encodings are in~table~\ref{tab:tab1}).
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Tool description}
-\addtodo{!!!Sepsat selling points!!!}
-\addtodo{Tohle by melo byt teziste prace a tvorit vetsinu obsahu}
-\addtodo{Archictecture overview}
+The goal for the tool was to fuzz D-Bus clients (the programs using D-Bus
+message bus as a communication mean), not the D-Bus message bus itself. While
+that would be a worthy goal on it's own, for bringing down the message bus
+would cause a severe harm to a running system, it is out of scope for our
+intentions, as it would require totally different approach.
+
+Dfuzzer is implemented as a standard D-Bus client. It simply connects to a
+message bus (either a session-level or a system-level one) and it calls remote
+methods from the interfaces provided on that bus by connected programs.
+Connected objects, their interfaces, methods provided by them and their
+argument/return value types are discovered automatically by introspection. Any process connected to a bus and using well-known name can be fuzz tested.
+
+After determining the structure of the interface, the fuzzer starts to craft
+random calls of the provided methods. It creates pseudo-random values for
+arguments, but it adheres to the expected data type (so if the tested method
+expects a long integer as an argument, the fuzzer does not attempt to pass
+anything else than a long integer).
+
+\subsection{Architecture}
+Dfuzzer is dividedd into three major modules The \emph{random module} is
+responsible for~pseudo-random data generation. It can generate data for~every
+primitive method argument signature~(\ref{tab:tab1}), except complex data types
+as structures, arrays of~types and~dictionaries which were not implemented yet.
+It also saves generated data sizes to~be able to~give a~condition to~end fuzz
+testing of~a~method. The~\emph{introspection module} performs an~object
+introspection, requesting and processing an introspection file of~a~chosen
+object from~the~bus daemon. It also provides the capability to interate over
+discovered interfaces and methods. 
+
+The~\emph{fuzz module}, given a method signature, uses the \emph{random} module
+to generate the arguments and calls the specified method. It can detect when
+the ~tested application does not respond or disconnects from~the~bus daemon.
+It also monitors (using \texttt{/proc/PID/status}\footnote{pid is process
+identification number} file) a~tested application process status to~be able
+to~confirm that a~tested application really disconnected from~the~bus daemon.
+Process status file is also used for~monitoring an~application process memory
+usage.
+
 \subsection{Ballast generation}
-\dummytext
+The~\emph{random module} provides functions for~generation of~all basic data
+types~(stated in~table \ref{tab:tab1}) except arrays, structures and~dictionaries
+which were not implemented. Besides pseudo-random numbers, the~\emph{random module} also generates
+a~specific boundary values of~number types.
+As Dfuzzer uses GDBus binding, the~functions in~the~\emph{random module} generate
+only valid UTF-8 strings. Pseudo-random characters which are used to~fill strings
+are pruned to~fit the~printable range.
+The~\emph{random module} also provides the~\texttt{NULL} terminated array of~strings,
+which will be sent to~a~tested process if it has any string parameters. Tester
+can include any valid UTF-8 strings inside this array including shell commands,
+bus names, object paths, interfaces or format strings.\\
+
 \subsection{Automated API analysis using introspection}
 \dummytext
-\subsection{\addtodo{Jeste neco?}}
-\dummytext
+\subsection{Dfuzzer usage}
+Dfuzzer is a command-line tool taking options as arguments for setting-up fuzz
+testing of a chosen application. Dfuzzer is fuzz testing only processes
+with~well-known names on~the~session bus daemon. This means it needs to~own
+only a~unique name within~the~session bus.
 
+\dummytext
+\subsection{Limitations}
+\addtodo{Using bindings limiting the scope of invalid messages to send}
 
 \section{Results}
 \addtodo{Popsat nalezene chyby}
