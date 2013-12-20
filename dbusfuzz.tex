@@ -513,18 +513,14 @@ Most bindings to~other programming languages have mapping of~those interface nam
 directly to~the~appropriate programming language constructs~(C++ virtual classes
 for~example).
 
-When each application connects to~the~bus daemon, the~daemon immediately assigns
-it a~name, called the unique connection name. Bus daemon ensures that these unique names are never reused during the~lifetime of~the~bus daemon.
+When each application connects to~the~bus daemon, the~daemon immediately
+assigns it a~name, called the unique connection name. Bus daemon ensures that
+these unique names are never reused during the~lifetime of~the~bus daemon.
 
-Applications may also own additional well-known names~(also called services).
-A~\mbox{D-Bus} application may register one or more well-known names~(services)
-that it will then own until it releases them. Example could be the~name called
-\texttt{org.freedesktop.dfuzzer}.\\If application wants to~own this well-known
-name~(service), it should have an~object at~the~path
-\texttt{/org/freedesktop/dfuzzerObject}. This object must be supporting
-the~interface \texttt{org.freedesktop.dfuzzerInterface}. Other applications
-connected to~the~same bus daemon could then send messages to~this bus
-name~(service), object and interface to~execute method calls.\\
+Applications may also own additional well-known names~(also called services),
+for example \texttt{org.freedesktop.dfuzzer}. Other applications connected
+to~the~same bus daemon could then send messages to~this bus name~(service),
+object and interface to~execute method calls.
 
 In~general, the~unique names can be thought of~as IP addresses and~the well-known
 names as domain names. So \texttt{org.freedesktop.dfuzzer} might map to~something
@@ -538,6 +534,111 @@ that an~application disconnected, it sends out notification messages to~all rema
 applications that the~disconnected application names have lost their owner.
 This can be used by~other applications to~monitor the~lifetime of~an~application
 in~which they are interested or an~application they communicate with.
+
+To make a~particular method call on~a~particular object instance, a~number
+of~nested components have to~be named:\\
+
+			\texttt{Address -> [Bus Name] -> Path -> Interface -> Method}\\
+D-Bus methods may accept any number of~arguments
+and~may return any number of~values, including none. 
+
+Bindings are used to~wrap low-level D-Bus C API calls to~the~higher level
+libraries or language constructs. To call a method in the GDbus binding we used
+for implementation of Dfuzzer, its name and arguments must be specified. Each
+argument of~a~method has its signature encoding as stated in~table
+\ref{tab:tab1}.\\
+
+\FloatBarrier
+\begin{table}[!h]
+\catcode`\-=12
+\caption{Signature encoding}
+\label{tab:tab1}
+\begin{center}
+	\begin{tabular}{| l | l |}
+	\hline
+	\textbf{Character} & \textbf{Data type} \\ \hline
+	y & 8-bit unsigned integer \\ \hline
+	b & boolean value \\ \hline
+	n & 16-bit signed integer \\ \hline
+	q & 16-bit unsigned integer \\ \hline
+	i & 32-bit signed integer \\ \hline
+	u & 32-bit unsigned integer \\ \hline
+	x & 64-bit signed integer \\ \hline
+	t & 64-bit unsigned integer \\ \hline
+	d & double-precision floating point number \\ \hline
+	s & UTF-8 string (no embedded null characters) \\ \hline
+	o & D-Bus Object Path string \\ \hline
+	g & D-Bus Signature string \\ \hline
+	a & Array \\ \hline
+	( & Structure start \\ \hline
+	) & Structure end \\ \hline
+	v & Variant type (GVariant type) \\ \hline
+	\{ & Dictionary begin \\ \hline
+	\} & Dictionary end \\ \hline
+	h & Unix file descriptor \\
+	\hline
+	\end{tabular}
+\end{center}
+\end{table}
+\FloatBarrier
+
+The~signatures of~arguments are joined to~form the~signature
+string, similar to~the~format strings
+in~\texttt{printf()} function.
+
+\subsection{Object Introspection}
+
+Object introspection is used to~obtain information about object interfaces,
+interface methods and~individual method parameteres. The call
+of~the~\texttt{org.freedesktop.DBus.Introspectable.Introspect} method returns
+serialized form of the introspection of an~object. The example of~introspection
+of~the~\texttt{/org/gnome/Shell} object by~calling tool for~working with~D-Bus
+objects, \texttt{gdbus}~(with some interfaces omitted for brevity, highlighted
+by dots):
+\begin{verbatim}
+<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
+    "http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
+<node>
+  (...)
+  <interface name="org.freedesktop.DBus.Introspectable">
+    <method name="Introspect">
+      <arg type="s" name="xml_data" direction="out"/>
+    </method>
+  </interface>
+  (...)
+  <interface name="org.gnome.Shell">
+    <method name="Eval">
+      <arg type="s" name="script" direction="in" />
+      <arg type="b" name="success" direction="out" />
+      <arg type="s" name="result" direction="out" />
+    </method>
+    <method name="ScreenshotArea">
+      <arg type="i" name="x" direction="in" />
+      <arg type="i" name="y" direction="in" />
+      <arg type="i" name="width" direction="in" />
+      <arg type="i" name="height" direction="in" />
+      <arg type="b" name="flash" direction="in" />
+      <arg type="s" name="filename" direction="in" />
+      <arg type="b" name="success" direction="out" />
+    </method>
+    <method name="Screenshot">
+      <arg type="b" name="include_cursor" direction="in" />
+      <arg type="b" name="flash" direction="in" />
+      <arg type="s" name="filename" direction="in" />
+      <arg type="b" name="success" direction="out" />
+    </method>
+    (...)
+    <property type="b" name="OverviewActive" access="readwrite" />
+    <property type="s" name="ShellVersion" access="read" />
+  </interface>
+  (...)
+</node>
+\end{verbatim}
+
+As seen from~object introspection, the~\texttt{/org/gnome/Shell} object has more
+interfaces~(object must have at~least one interface). Interfaces has methods
+and~signals. Each argument of~a~method is declared with~name, its direction
+and~signature string~(signature encodings are in~table~\ref{tab:tab1}).
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -561,7 +662,9 @@ in~which they are interested or an~application they communicate with.
 \dummytext
 
 \section{Conclusion}
-\dummytext
+\subsection{Further work}
+\addtodo{dbus signals}
+\addtodo{complicated data generation: arrays of structures of arrays...}
 
 \section*{Acknowledgment}
 
