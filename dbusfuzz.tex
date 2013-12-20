@@ -648,18 +648,73 @@ and~signature string~(signature encodings are in~table~\ref{tab:tab1}).
 \addtodo{Archictecture overview}
 \subsection{Ballast generation}
 \dummytext
-\dummytext
 \subsection{Automated API analysis using introspection}
-\dummytext
 \dummytext
 \subsection{\addtodo{Jeste neco?}}
 \dummytext
 
+
 \section{Results}
 \addtodo{Popsat nalezene chyby}
 \addtodo{Popsat nahled programatoru na tohle tema: "interni API" a najit presvedcive argumenty proc to neni pravda}
-\dummytext
-\dummytext
+\subsection{Testing during the development of the tool}
+During the development of the Dfuzzer it was used on randomly chosen applications.
+These were GNOME Shell, IMSettings and Evince.
+
+GNOME Shell is the~core user interface of~the~GNOME desktop environment
+providing basic functionality like switching between windows and~launching
+applications. We have chosen GNOME Shell as we are the common users of this
+desktop shell and it was relatively new technology. By testing its D-Bus
+interfaces we found these bugs:
+\begin{itemize}
+	\item bug which crashed the GNOME Shell
+	\item bug which caused the whole GNOME desktop session termination
+\end{itemize}
+When we reoported these bugs on GNOME Bugzilla, the~approach of~the~GNOME
+developers to~the~reported bugs was lax. One of~them commented that the~values
+given to~the~tested methods are not valid, so it is almost legit
+the~GNOME Shell crashes in~this case and~that the~tested methods are
+in~a~private interface used only by~certain GNOME applications. These facts may
+be true, but still letting the~application to~crash is not a~good programming
+practice.
+
+IMSettings is a~framework that delivers input method settings and~applies the~changes
+immediately, so it will take an~effect without~restarting applications
+and~the~desktop. This application was chosen because it process inputs
+from different languages and we found the most bugs in this application during
+development process of the Dfuzzer, including:
+\begin{itemize}
+	\item 3 bugs related to crashes
+	\item memory leaks -- the biggest leaking of IMSettings detected was when it
+		used 146.6 times more memory than its initial memory on start
+\end{itemize}
+
+Finally Evince, a~document viewer for~multiple document formats was tested.
+We have not detected any bugs in its D-Bus interfaces by using the Dfuzzer.
+
+
+\subsection{Testing after the development of the tool}
+When the Dfuzzer implementation and functionality reached our requirements
+and stability we used it on testing the Red Hat Enterprise Linux 7 (RHEL7)
+GNU/Linux distribution. We tested all of the defaultly running applications
+on the system and the session bus daemons. Results were interesting as we found
+16 bugs and approximately half of them were more serious issues. The most
+critical bug found was the removal of root account which occured when we were
+fuzzing service provided by \emph{accountsservice} package. Other serious bugs
+were crashes of services of these packages:
+\begin{itemize}
+	\item \emph{systemd}
+	\item \emph{avahi}
+	\item \emph{colord}
+	\item \emph{gnome-session}
+	\item \emph{gnome-settings-daemon}
+	\item \emph{gjs}
+	\item \emph{kde-workspace}
+	\item \emph{kde-runtime}
+\end{itemize}
+The less critical issues were memory leaks which were found for example in packages
+\emph{firewalld} and \emph{gdm}.
+
 
 \section{Conclusion}
 \subsection{Further work}
