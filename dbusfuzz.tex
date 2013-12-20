@@ -344,7 +344,7 @@ Purky\v{n}ova 99/75a Brno, Czech Republic}
 
 
 \begin{abstract}
-We present DFuzzer, a fully automated tool for fuzz testing
+We present Dfuzzer, a fully automated tool for fuzz testing
 programs communicating via D-Bus, the prevalent modern mechanism for an
 inter-process communication in GNU/Linux ecosystem. With the GNU/Linux systems
 generally going towards tighter and better integrated systems, even the basic
@@ -354,7 +354,7 @@ important programs receiving data over D-Bus, it is important that they
 sanitize the inputs correctly. Unfortunately, it is often not the case, as
 demonstrated by serious bugs found by our fuzzing tool.
 
-DFuzzer is fully automated: using D-Bus introspection, it is able to acquire
+Dfuzzer is fully automated: using D-Bus introspection, it is able to acquire
 the structure of the data the target program expects, and generate ballast
 data respecting this structure, so the target program starts using them
 incorrectly if it does not carefully validate it. We have found numerous bugs
@@ -365,12 +365,17 @@ security sensitive issues as well as data-loss bugs.
 In this paper, we briefly describe the eco-system related to D-Bus. We follow
 with the description of the tool. In the end, we present the application of the
 tool for the systematic testing of various operating system parts, and show the
-most interesting bugs we have found.
+most interesting bugs we have found. We also discuss the software engineering
+aspects of fuzz testing D-Bus: we have met developer's opinions that the
+problems found do not constitute a valid bugs, because the D-Bus interface is
+actually an internal API. The discussion is interesting by showing that the
+D-Bus usage is not a fully mature area of engineering, and the programmers do
+not have a shared understanding of its purpose.
 
 \end{abstract}
 
 \begin{keywords}
-D-Bus, fuzzer, fuzzing, testing, automation, pseudo-random data generation, IPC
+D-Bus, fuzzer, fuzz testing, automation, pseudo-random data generation, IPC
 \end{keywords}
 
 % For peer review papers, you can put extra information on the cover
@@ -386,55 +391,6 @@ D-Bus, fuzzer, fuzzing, testing, automation, pseudo-random data generation, IPC
 
 
 \section{Introduction}
-\addtodo{Zbezne popsat co je DBus a jakou hraje roli v Linuxu}
-\addtodo{Popsat problem co resime a jeho vyznam}
-\addtodo{Pozor, reviewers nemusi byt linux experti}
-
-Testing is used to~find bugs~(errors or other defects) in~software. By~finding bugs,
-testing also provides quality assurance of~software. Software testing can be stated
-as the~process of~validating and~verifying that a~computer software:
-\begin{itemize}
-	\item meets the~design and~development requirements,
-	\item works as expected,
-	\item is secure,
-	\item and~that bugs are not present.
-\end{itemize}
-
-Fuzzing is a~type of~testing where a~goal is to~find bugs in~software, preferably
-ones that have security implications. Fuzzing is automated, brute force technique
-of~testing and~it exploits the~fact that many bugs in~software are caused
-by~handling inputs from~a~user without applying validation routines on~that
-inputs. The~goal of~fuzz testing~(fuzzing) is to~crash an~application or a~protocol
-and~analyze the~results.
-
-The~term fuzzing was first used by~professor Barton Miller who used fuzzing to~test
-robustness of~UNIX applications in~1989~\cite{Fuzzing2}. Fuzzing is defined
-in~``Fuzzing: Brute Force Vulnerability Discovery''~\cite[p.~22]{Fuzzing} as
-``\emph{a~method for~discovering faults in~software by~providing unexpected
-input and~monitoring for~exceptions. It is typically an~automated or semiautomated
-process that involves repeatedly manipulating and~supplying data to~target software
-for~processing}''.
-Another definition~(from ``Fuzzing for~Software Security Testing and~Quality
-Assurance''~\cite[p.~1]{Fuzzing2}) says it is ``\emph{a~highly automated testing
-technique that covers numerous boundary cases using invalid data~(from~files,
-network protocols, API calls, and~other targets) as application input to~better
-ensure the~absence of~exploitable vulnerabilities. The~name comes~from modem
-applications tendency to~fail due to~random input caused by~line noise on~`fuzzy'
-telephone lines}''.
-
-Fuzzing is close to~the~boundary value analysis, where you create test values that
-infringe the~boundary of~known good and~bad values. Fuzzing is very effective
-because many exploitable vulnerabilities are caused by~applications accepting
-user input and~processing that data without applying validation
-routines~\cite{Fuzzing}.
-
-Computers use protocols in~all aspects of~internal and~external communication.
-Protocols represent a~structure for~data transfer and~processing with~defined
-syntax. Certain standards and~rules understood by~both sending and~receiving
-entities must be agreed on~to~communicate data in~meaningful way~\cite{Fuzzing}.
-Some protocols are designed to~be human readable and~are represented in~plain
-text form. Other protocols are represented in~binary format.
-
 D-Bus is a~binary protocol and~a~message bus system providing applications
 a~simple way to~talk to~one another. D-Bus is ``\emph{a~system for~\mbox{inter-process}
 communication~(IPC) and~Remote Procedure Calling~(RPC) between
@@ -442,22 +398,56 @@ processes running on the same machine and~makes it simple and~reliable to~code
 a~`single instance' application or daemon, and~to~launch applications and~daemons
 on~demand when their services are needed}''~\cite{DBUS}.
 
-As D-Bus has become important part of~almost all GNU/Linux distribution there
-are more and~more applications which use it for~IPC. Fuzzing is ideal for~testing
-these applications as they have interfaces which contain callable methods
-with~input arguments. In~this paper we present the~Dfuzzer, tool for~fuzz
-testing D-Bus applications. It is capable to~test interfaces which applications
-export to~the~D-Bus. The~tool is focused on~finding bugs related to~memory leaks
-and~buffer overflows by~providing still expanding pseudo-random data and~boundary
-values to~applications inputs.
+Recently, D-Bus has become important part of~almost all GNU/Linux
+distributions. There are more and~more applications which use it for~IPC,
+including key system parts like service managers. The growing importance is witnessed
+by the recent inclusion of the D-Bus message bus directly into the Linux kernel
+upstream.
+
+Applications communicating via D-Bus either provide interfaces which contain callable
+methods with~input arguments, or call such methods over
+the message bus, providing arguments for them. This means the programs
+receiving the data must carefully validate it, because they may originate in
+any program having access to the message bus. Unfortunately, this does not seem
+to be the usual case, and programs rely on convention and good will of the
+callers.
+
+This structure means the D-Bus communicating programs are a good target for
+fuzz testing, which is well-suited for detecting bugs stemming from improper
+validation of input data. Fuzz testing (or simply fuzzing) is a~well-known type
+of~testing\cite{Fuzzing2, Fuzzing}: it it an automated, brute force, black-box
+technique, exploiting the~fact that many bugs in~software are caused
+by~handling inputs without applying proper validation routines on~those.
+Fuzzing is close to~the~boundary value analysis, where you create test values
+that infringe the~boundary of~known good and~bad values.  Fuzz testing has a
+long history of being applied in security area \addtodo{citations!}, because
+the type of bugs it finds often has security implications: improper validation
+sometimes means there is a possibility to carefully craft the input so the
+program does something useful to the attacker. Outside the security testing
+domain, the technique was successfuly used for finding bugs in
+compilers\addtodo{cite}.
+
+The advantage of fuzz testing is that the bug detection is easily automated: in
+the most basic form, the tool can just send random data as the input of the
+program, and the program should not misbehave (usually, crash), but handle the
+wrong input gracefully. Specific application of the technique improve efficiency by
+carefully crafting the input so it adheres to the protocol expected by the
+program, but having random semantics, so it passes the basic validation and
+penetrates deeper into the program. For example, if a program expects XML as an
+input, the fuzzer will not generate random data, as that would be refused by
+the most basic XML parser. Instead, a valid XML containing random elements and
+their content is generated, to see how the program validates the input beyond
+it simply being an XML.
 
 \section{DBus message bus}
 \addtodo{Trochu detailneji popsat, co je dbus, ale neprehanet}
 D-Bus was created to~provide IPC system with a single, unified protocol
 and~currently, it is used as default IPC mechanism for~exhanging data between
-applications in~desktop environments as for~example GNOME, KDE or Xfce and~even
-Windows port exists. Besides desktop applications communication it is also used
-for~communicating between system applications and~user sessions.
+applications in~desktop environments as for~example GNOME, KDE or Xfce (even
+Windows port exists). Besides desktop applications communication it is also used
+for~communication between system applications and~user sessions.
+
+\subsection{General Architecture}
 
 D-Bus has both the~system bus daemon (for~events such as ``new hardware device
 added'' or ``printer queue changed'') and~the~session bus daemon (for~general
@@ -502,8 +492,7 @@ for~communication between applications running within the~same X~Window System\f
 for~graphical user interfaces} session. For every login to~X, a~session bus
 daemon is started.\\
 
-D-BUS protocol is binary, which means D-BUS messages incur low overhead when
-marshaling and~demarshaling data. Messages consist of~two sections, the~header
+D-Bus protocol is binary. Messages consist of~two sections, the~header
 and~the~body. The~header contains routing information and~the~type signature
 for~the~data. The body contains the~data being sent in~binary format. Each
 piece~of~data has a~type code \mbox{associated} with~it and~is packed into the~body
@@ -511,6 +500,44 @@ accordingly. Some common types include bytes, 32 and~64 bit integers, doubles,
 unix file descriptors and~strings. Common data types can be used to~build more
 complex data~types such as arrays, dictionaries or structures.
 
+\subsection{D-Bus Interfaces Provided by Programs}
+Messages are sent to~objects. Each object has members -- methods and signals.
+Methods are operations that can be invoked on~an~object, with~optional input~(arguments) and~output~(return values).
+Signals are broadcasts from~the~object to~any application on~the~same bus, which
+registered that it is interested in~signals emitted by~this object. Signals may
+contain a~data payload. Methods and~signals are referred to~by~name.
+
+Each object supports one or more interfaces. An~interface is a~named group
+of methods and~signals. D-Bus identifies interfaces with~a~simple namespaced string.
+Most bindings to~other programming languages have mapping of~those interface names
+directly to~the~appropriate programming language constructs~(C++ virtual classes
+for~example).
+
+When each application connects to~the~bus daemon, the~daemon immediately assigns
+it a~name, called the unique connection name. Bus daemon ensures that these unique names are never reused during the~lifetime of~the~bus daemon.
+
+Applications may also own additional well-known names~(also called services).
+A~\mbox{D-Bus} application may register one or more well-known names~(services)
+that it will then own until it releases them. Example could be the~name called
+\texttt{org.freedesktop.dfuzzer}.\\If application wants to~own this well-known
+name~(service), it should have an~object at~the~path
+\texttt{/org/freedesktop/dfuzzerObject}. This object must be supporting
+the~interface \texttt{org.freedesktop.dfuzzerInterface}. Other applications
+connected to~the~same bus daemon could then send messages to~this bus
+name~(service), object and interface to~execute method calls.\\
+
+In~general, the~unique names can be thought of~as IP addresses and~the well-known
+names as domain names. So \texttt{org.freedesktop.dfuzzer} might map to~something
+like \texttt{:1.396} just as \texttt{google.com} maps to~IP address
+\texttt{173.194.35.70}.\\
+
+Using well-known names~(services) brings one big advantage. When an~application
+crashes or exits, the~operating system kernel has a~responsibility to~close
+its connection to~the~message bus. As~soon as~the~message bus daemon registers
+that an~application disconnected, it sends out notification messages to~all remaining
+applications that the~disconnected application names have lost their owner.
+This can be used by~other applications to~monitor the~lifetime of~an~application
+in~which they are interested or an~application they communicate with.
 
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
