@@ -601,7 +601,7 @@ method returns serialized form of the introspection of an~object. The example of
 of~the~\texttt{/org/gnome/Shell} object by~calling tool for~working with~D-Bus
 objects, \texttt{gdbus}~(with some interfaces omitted for brevity, highlighted
 by dots):
-\addtodo{Fix layout. Smaller font?}
+{\scriptsize
 \begin{verbatim}
 <node>
   (...)
@@ -633,12 +633,16 @@ by dots):
       <arg type="b" name="success" direction="out" />
     </method>
     (...)
-    <property type="b" name="OverviewActive" access="readwrite" />
-    <property type="s" name="ShellVersion" access="read" />
+    <property type="b" name="OverviewActive"
+        access="readwrite" />
+    <pro
+    perty type="s" name="ShellVersion"
+        access="read" />
   </interface>
   (...)
 </node>
 \end{verbatim}
+}
 
 As seen from~object introspection, the~\texttt{/org/gnome/Shell} object has more
 interfaces~(object must have at~least one interface). Interfaces has methods
@@ -744,13 +748,14 @@ an~event which occurred followed by~a~process memory size. The~last items in~log
 are the~inputs on~which an~event occured and~so the~arguments signatures
 with~the~corresponding values. An~example of~the~truncated log file from~fuzz
 testing the~\emph{GNOME Shell 3.6.3.1}:\addtodo{Fix layout. Smaller font?}
+{
+\footnotesize
 \begin{verbatim}
-===========================================================================
+================================================
 fuzzing method Eval(s):
-
 end of fuzzing of method 'Eval'
-===========================================================================
-===========================================================================
+================================================
+================================================
 fuzzing method ScreenshotArea(i, i, i, i, b, s):
 [ScreenshotArea LOG 1]
   process disconnected from D-Bus
@@ -761,18 +766,15 @@ fuzzing method ScreenshotArea(i, i, i, i, b, s):
   --i-- '2147483647'
   --i-- '-2147483648'
   --b-- 'true'
-  --s [length: 67 B]-- '}>;VhlC) H-C}zF>\!550d-%49!Nax;_4S3|@W$>|1aw)%4e#
-Iz4/%9@;7l|0%]BXm?'
-
+  --s [length: 27 B]-- '>;VhlC) H-CzF>!550d-49!Nax;'
 end of fuzzing of method 'ScreenshotArea'
-===========================================================================
-===========================================================================
+================================================
+================================================
 fuzzing method ScreenshotWindow(b, b, b, s):
-
 end of fuzzing of method 'ScreenshotWindow'
-===========================================================================
-...
+================================================
 \end{verbatim}
+}
 \subsection{\textsc{Dfuzzer} usage}
 \addtodo{Not that sure about this section. Either remove, or extend.}
 \textsc{Dfuzzer} is a command-line tool taking options as arguments for setting-up fuzz
