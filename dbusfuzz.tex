@@ -321,7 +321,7 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{\textbf{Dfuzzer: A D-Bus fuzzing tool}\addtodo{Better title? It's a
+\title{\textbf{\textsc{Dfuzzer}: A D-Bus fuzzing tool}\addtodo{Better title? It's a
 fuzzer for D-Bus using applications}}
 
 % author names and affiliations
@@ -345,8 +345,8 @@ Purky\v{n}ova 99/75a Brno, Czech Republic}
 
 
 \begin{abstract}
-\addtodo{Use the special caps for Dfuzzer name, and possibly others}
-We present Dfuzzer, a fully automated tool for fuzz testing
+\addtodo{Use the special caps for \textsc{Dfuzzer} name, and possibly others}
+We present \textsc{Dfuzzer}, a fully automated tool for fuzz testing
 programs communicating via D-Bus, the prevalent modern mechanism for an
 inter-process communication in GNU/Linux ecosystem. With the GNU/Linux systems
 generally going towards tighter and better integrated systems, even the basic
@@ -356,7 +356,7 @@ important programs receiving data over D-Bus, it is important that they
 sanitize the inputs correctly. Unfortunately, it is often not the case, as
 demonstrated by serious bugs found by our fuzzing tool.
 
-Dfuzzer is fully automated: using D-Bus introspection, it is able to acquire
+\textsc{Dfuzzer} is fully automated: using D-Bus introspection, it is able to acquire
 the structure of the data the target program expects, and generate ballast
 data respecting this structure, so the target program starts using them
 incorrectly if it does not carefully validate it. We have found numerous bugs
@@ -550,7 +550,7 @@ and~may return any number of~values, including none.
 
 Bindings are used to~wrap low-level D-Bus C API calls to~the~higher level
 libraries or language constructs. To call a method in the GDbus binding we used
-for implementation of Dfuzzer, its name and arguments must be specified. Each
+for implementation of \textsc{Dfuzzer}, its name and arguments must be specified. Each
 argument of~a~method has its signature encoding as stated in~table
 \ref{tab:tab1}.\addtodo{Consider removing this table, it's a filler}\\
 
@@ -654,7 +654,7 @@ that would be a worthy goal on it's own, for bringing down the message bus
 would cause a severe harm to a running system, it is out of scope for our
 intentions, as it would require totally different approach.
 
-Dfuzzer is implemented as a standard D-Bus client. It simply connects to a
+\textsc{Dfuzzer} is implemented as a standard D-Bus client. It simply connects to a
 message bus (either a session-level or a system-level one) and it calls remote
 methods from the interfaces provided on that bus by connected programs.
 Connected objects, their interfaces, methods provided by them and their
@@ -667,7 +667,7 @@ expects a long integer as an argument, the fuzzer does not attempt to pass
 anything else than a long integer).
 
 \subsection{Architecture}
-Dfuzzer is dividedd into three major modules The \emph{random module} is
+\textsc{Dfuzzer} is dividedd into three major modules The \emph{random module} is
 responsible for~pseudo-random data generation. It can generate data for~every
 primitive method argument signature~(\ref{tab:tab1}), except complex data types
 as structures, arrays of~types and~dictionaries which were not implemented yet.
@@ -693,7 +693,7 @@ The~\emph{random module} provides functions for~generation of~all basic data
 types~(stated in~table \ref{tab:tab1}) except arrays, structures and~dictionaries
 which were not implemented. Besides pseudo-random numbers, the~\emph{random module} also generates
 a~specific boundary values of~number types.
-As Dfuzzer uses GDBus binding, the~functions in~the~\emph{random module} generate
+As \textsc{Dfuzzer} uses GDBus binding, the~functions in~the~\emph{random module} generate
 only valid UTF-8 strings. Pseudo-random characters which are used to~fill strings
 are pruned to~fit the~printable range.
 The~\emph{random module} also provides the~\texttt{NULL} terminated array of~strings,
@@ -707,7 +707,7 @@ first. The~interface \texttt{org.freedesktop.DBus.Introspectable} contains
 the~\texttt{Introspect} method for obtaining an~XML file containing all
 of~the~interfaces and~the~methods of~a~specified process. Returned XML file is
 processed into a structure which can be used to~find a~particular interface.
-The~\emph{introspection module} which is part of~dfuzzer encapsulates all
+The~\emph{introspection module} which is part of~\textsc{Dfuzzer} encapsulates all
 object introspection details and~provides an~interface for~easy iteration
 through methods and~their arguments.\\
 
@@ -715,7 +715,7 @@ through methods and~their arguments.\\
 Every method argument signature is specified by~its
 direction which is either ``out'' (returned argument signature) or
 ``in''~(accepted argument signature). When an~object introspection of~a~specified
-interface is done, dfuzzer iterates through interface methods. For~every method,
+interface is done, \textsc{Dfuzzer} iterates through interface methods. For~every method,
 its accepted arguments signatures~(with~direction ``in'') and a~method name are
 passed to~the~\emph{fuzz module}.
 
@@ -725,14 +725,14 @@ in~the~cycle by~calling this method many times, but with~different arguments.
 Before each call of~a~method, its arguments must be generated first. Arguments
 are generated by~calling functions from~the~\emph{random module} according
 to~argument signature.  A~method is called synchronously because when error
-occurs, it returns a~\texttt{NULL} and~so dfuzzer knows that well-known name is
+occurs, it returns a~\texttt{NULL} and~so \textsc{Dfuzzer} knows that well-known name is
 no longer on~the~bus daemon or no response returned after timeout~(even if
 a~method has no return value, a~``method return'' message is still sent
-to~the~caller). When \texttt{NULL} is returned, Dfuzzer looks into a~tested
+to~the~caller). When \texttt{NULL} is returned, \textsc{Dfuzzer} looks into a~tested
 process status file \texttt{/proc/pid/status} to~be sure that a~tested process
 really crashed. If not, it means that a~tested process spent a~long time
-processing the~data received from~dfuzzer and~so it did not responded
-to~the~method call from~dfuzzer in~given timeout. When Dfuzzer finds out that
+processing the~data received from~\textsc{Dfuzzer} and~so it did not responded
+to~the~method call from~\textsc{Dfuzzer} in~given timeout. When \textsc{Dfuzzer} finds out that
 a~tested process did not crash, testing continues.\\
 
 
@@ -773,10 +773,10 @@ end of fuzzing of method 'ScreenshotWindow'
 ===========================================================================
 ...
 \end{verbatim}
-\subsection{Dfuzzer usage}
+\subsection{\textsc{Dfuzzer} usage}
 \addtodo{Not that sure about this section. Either remove, or extend.}
-Dfuzzer is a command-line tool taking options as arguments for setting-up fuzz
-testing of a chosen application. Dfuzzer is fuzz testing only processes
+\textsc{Dfuzzer} is a command-line tool taking options as arguments for setting-up fuzz
+testing of a chosen application. \textsc{Dfuzzer} is fuzz testing only processes
 with~well-known names on~the~session bus daemon. This means it needs to~own
 only a~unique name within~the~session bus.
 
@@ -787,7 +787,7 @@ only a~unique name within~the~session bus.
 \addtodo{Make this speak about future work too}
 
 \subsection{Project details}
-The Dfuzzer is written in C with source code publicly
+The \textsc{Dfuzzer} is written in C with source code publicly
 available\footnote{https://github.com/matusmarhefka/dfuzzer} under the GNU GENERAL
 PUBLIC LICENSE Version 3. The work on project was done within the bachelors thesis
 and is the result of cooperation between Red Hat and Faculty of Information
@@ -813,10 +813,10 @@ applications and most importantly applications crashes. To accomplish this task
 we have written the test service which exports connection name, object path,
 interface and one method to the D-Bus daemon. We introduced memory leaking
 and buffer overflows to this test service on purpose and were testing
-the Dfuzzer accuracy to detect those faults.
+the \textsc{Dfuzzer} accuracy to detect those faults.
 
 \subsection{Testing during the development of the tool}
-During the development of the Dfuzzer it was used on randomly chosen applications.
+During the development of the \textsc{Dfuzzer} it was used on randomly chosen applications.
 These were GNOME Shell, IMSettings and Evince.
 
 GNOME Shell is the~core user interface of~the~GNOME desktop environment
@@ -840,7 +840,7 @@ IMSettings is a~framework that delivers input method settings and~applies the~ch
 immediately, so it will take an~effect without~restarting applications
 and~the~desktop. This application was chosen because it process inputs
 from different languages and we found the most bugs in this application during
-development process of the Dfuzzer, including:
+development process of the \textsc{Dfuzzer}, including:
 \begin{itemize}
 	\item 3 bugs related to crashes
 	\item memory leaks -- the biggest leaking of IMSettings detected was when it
@@ -848,10 +848,10 @@ development process of the Dfuzzer, including:
 \end{itemize}
 
 Finally Evince, a~document viewer for~multiple document formats was tested.
-We have not detected any bugs in its D-Bus interfaces by using the Dfuzzer.
+We have not detected any bugs in its D-Bus interfaces by using the \textsc{Dfuzzer}.
 
 \subsection{Testing after the development of the tool}
-When the Dfuzzer implementation and functionality reached our requirements
+When the \textsc{Dfuzzer} implementation and functionality reached our requirements
 and stability we used it on testing the Red Hat Enterprise Linux 7 (RHEL7)
 GNU/Linux distribution. We tested all of the defaultly running applications
 on the system and the session bus daemons. Results were interesting as we found
