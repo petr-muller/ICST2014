@@ -321,8 +321,8 @@
 %
 % paper title
 % can use linebreaks \\ within to get better formatting as desired
-\title{\textbf{Dfuzzer: A D-Bus fuzzing tool}}
-
+\title{\textbf{Dfuzzer: A D-Bus fuzzing tool}\addtodo{Better title? It's a
+fuzzer for D-Bus using applications}}
 
 % author names and affiliations
 % use a multiple column layout for up to three different
@@ -333,6 +333,7 @@ Brno University of Technology,\\
 Bo\v{z}et\v{e}chova 1/2 Brno, Czech Republic}
 \IEEEauthorblockA{Red Hat,\\
 Purky\v{n}ova 99/75a Brno, Czech Republic}
+\addtodo{Fix typesetting. How to typeset double affiliations?}
 }
 % conference papers do not typically use \thanks and this command
 % is locked out in conference mode. If really needed, such as for
@@ -344,6 +345,7 @@ Purky\v{n}ova 99/75a Brno, Czech Republic}
 
 
 \begin{abstract}
+\addtodo{Use the special caps for Dfuzzer name, and possibly others}
 We present Dfuzzer, a fully automated tool for fuzz testing
 programs communicating via D-Bus, the prevalent modern mechanism for an
 inter-process communication in GNU/Linux ecosystem. With the GNU/Linux systems
@@ -371,7 +373,8 @@ problems found do not constitute a valid bugs, because the D-Bus interface is
 actually an internal API. The discussion is interesting by showing that the
 D-Bus usage is not a fully mature area of engineering, and the programmers do
 not have a shared understanding of its purpose.
-
+\addtodo{The abstract is very long. Prune?}
+\addtodo{Re-check after finishing the text}
 \end{abstract}
 
 \begin{keywords}
@@ -471,7 +474,8 @@ D-Bus has several layers:
 
 \begin{figure}[h]
 \centering
-\caption{D-Bus overview~\cite{DBUS}}
+\caption{D-Bus overview~\cite{DBUS} \addtodo{Fix the image to fit into 2-col
+layout}}
 \label{fig:dbus_image}
 \includegraphics[width=0.5\textwidth]{dbus_diagram.eps}
 \end{figure}
@@ -537,8 +541,10 @@ in~which they are interested or an~application they communicate with.
 
 To make a~particular method call on~a~particular object instance, a~number
 of~nested components have to~be named:\\
+\addtodo{Fix typesetting}
 
 			\texttt{Address -> [Bus Name] -> Path -> Interface -> Method}\\
+
 D-Bus methods may accept any number of~arguments
 and~may return any number of~values, including none. 
 
@@ -546,7 +552,7 @@ Bindings are used to~wrap low-level D-Bus C API calls to~the~higher level
 libraries or language constructs. To call a method in the GDbus binding we used
 for implementation of Dfuzzer, its name and arguments must be specified. Each
 argument of~a~method has its signature encoding as stated in~table
-\ref{tab:tab1}.\\
+\ref{tab:tab1}.\addtodo{Consider removing this table, it's a filler}\\
 
 \FloatBarrier
 \begin{table}[!h]
@@ -589,12 +595,13 @@ in~\texttt{printf()} function.
 \subsection{Object Introspection}
 
 Object introspection is used to~obtain information about object interfaces,
-interface methods and~individual method parameteres. The call
-of~the~\texttt{org.freedesktop.DBus.Introspectable.Introspect} method returns
-serialized form of the introspection of an~object. The example of~introspection
+interface methods and~individual method parameteres. The call \addtodo{Fix
+typesetting} of~the~\texttt{org.freedesktop.DBus.Introspectable.Introspect}
+method returns serialized form of the introspection of an~object. The example of~introspection
 of~the~\texttt{/org/gnome/Shell} object by~calling tool for~working with~D-Bus
 objects, \texttt{gdbus}~(with some interfaces omitted for brevity, highlighted
 by dots):
+\addtodo{Fix layout. Smaller font?}
 \begin{verbatim}
 <node>
   (...)
@@ -679,6 +686,8 @@ to~confirm that a~tested application really disconnected from~the~bus daemon.
 Process status file is also used for~monitoring an~application process memory
 usage.
 
+\addtodo{Add the image, after re-fittin for 2-col layout}
+
 \subsection{Ballast generation}
 The~\emph{random module} provides functions for~generation of~all basic data
 types~(stated in~table \ref{tab:tab1}) except arrays, structures and~dictionaries
@@ -734,7 +743,7 @@ a~method, a~log is created within~a~method entry. After a~log header there is a~
 an~event which occurred followed by~a~process memory size. The~last items in~log
 are the~inputs on~which an~event occured and~so the~arguments signatures
 with~the~corresponding values. An~example of~the~truncated log file from~fuzz
-testing the~\emph{GNOME Shell 3.6.3.1}:
+testing the~\emph{GNOME Shell 3.6.3.1}:\addtodo{Fix layout. Smaller font?}
 \begin{verbatim}
 ===========================================================================
 fuzzing method Eval(s):
@@ -765,14 +774,17 @@ end of fuzzing of method 'ScreenshotWindow'
 ...
 \end{verbatim}
 \subsection{Dfuzzer usage}
+\addtodo{Not that sure about this section. Either remove, or extend.}
 Dfuzzer is a command-line tool taking options as arguments for setting-up fuzz
 testing of a chosen application. Dfuzzer is fuzz testing only processes
 with~well-known names on~the~session bus daemon. This means it needs to~own
 only a~unique name within~the~session bus.
 
-\dummytext
 \subsection{Limitations}
 \addtodo{Using bindings limiting the scope of invalid messages to send}
+\addtodo{Cannot handle more complex arguments (structures)}
+\addtodo{D-Bus signals}
+\addtodo{Make this speak about future work too}
 
 \subsection{Project details}
 The Dfuzzer is written in C with source code publicly
@@ -789,7 +801,6 @@ portability wrappers, and interfaces for such runtime functionality as an event
 loop, threads, dynamic loading, and an object system. GLib2 also provides GDBus
 bindings, so applications do not have to be written in low-level D-Bus C library
 and instead use the high-level advantages of GDBus binding and data types from GLib2.
-
 
 
 \section{Results}
@@ -860,16 +871,16 @@ were crashes of services of these packages:
 \end{itemize}
 The less critical issues were memory leaks which were found for example in packages
 \emph{firewalld} and \emph{gdm}.
-
+\addtodo{Subsection (or section?) discussing bug problematics}
 
 \section{Conclusion}
+\addtodo{Actually write this}
 \subsection{Further work}
 \addtodo{dbus signals}
 \addtodo{complicated data generation: arrays of structures of arrays...}
 
 \section*{Acknowledgment}
-
-The authors would like to thank...
+\addtodo{Do we need an ack someone?}
 
 
 % trigger a \newpage just before the given reference
