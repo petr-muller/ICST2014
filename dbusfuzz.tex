@@ -327,14 +327,22 @@ fuzzer for D-Bus using applications}}
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
-\author{\IEEEauthorblockN{Mat\'{u}\v{s} Marfefka and Petr Muller,}
-\IEEEauthorblockA{Faculty of Information Technology\\
-Brno University of Technology,\\
-Bo\v{z}et\v{e}chova 1/2 Brno, Czech Republic}
-\IEEEauthorblockA{Red Hat,\\
-Purky\v{n}ova 99/75a Brno, Czech Republic}
-\addtodo{Fix typesetting. How to typeset double affiliations?}
+\author{\IEEEauthorblockN{
+Mat\'{u}\v{s} Marfefka\IEEEauthorrefmark{1}\IEEEauthorrefmark{2}
+and Petr Muller\IEEEauthorrefmark{1}\IEEEauthorrefmark{2}
 }
+\IEEEauthorblockA{
+	\IEEEauthorrefmark{1}Red Hat Czech\\
+	Purky\v{n}ova 99, Brno, Czech Republic\\
+	\{mmarhefk\textbar muller\}@redhat.com
+}
+\IEEEauthorblockA{
+	\IEEEauthorrefmark{2}Faculty of Information Technology\\
+	Brno University of Technology\\
+	Bo\v{z}et\v{e}chova 2, Brno, Czech Republic}
+\addtodo{This looks ugly. How to typeset double affiliations?}
+}
+
 % conference papers do not typically use \thanks and this command
 % is locked out in conference mode. If really needed, such as for
 % the acknowledgment of grants, issue a \IEEEoverridecommandlockouts
@@ -477,24 +485,24 @@ D-Bus has several layers:
 \caption{D-Bus overview~\cite{DBUS} \addtodo{Fix the image to fit into 2-col
 layout}}
 \label{fig:dbus_image}
-\includegraphics[width=0.5\textwidth]{dbus_diagram.eps}
+\includegraphics[width=\columnwidth]{dbus_diagram.eps}
 \end{figure}
 
 
 D-Bus contains the~bus daemons which act as~routers for~messages. Processes
 can connect to~the~bus daemons to~use their routing services as stated on~D-Bus
 overview~\ref{fig:dbus_image}. There are two standard buses: the~system bus
-and~the~session bus.\\
+and~the~session bus.
 
 The~system bus is a~global daemon that any application running in~any
 context can use as~a~transport router. It is a~single point where applications
 can export services that anyone can use. Only one system bus daemon
-can be run at a~time within~an~operating system.\\
+can be run at a~time within~an~operating system.
 
 The~session bus is the~bus local to~the~current user's session. It is used
 for~communication between applications running within the~same X~Window System\footnote{X~Window is a~system and~a~network protocol that provides a~basis
 for~graphical user interfaces} session. For every login to~X, a~session bus
-daemon is started.\\
+daemon is started.
 
 D-Bus protocol is binary. Messages consist of~two sections, the~header
 and~the~body. The~header contains routing information and~the~type signature
@@ -529,7 +537,7 @@ object and interface to~execute method calls.
 In~general, the~unique names can be thought of~as IP addresses and~the well-known
 names as domain names. So \texttt{org.freedesktop.dfuzzer} might map to~something
 like \texttt{:1.396} just as \texttt{google.com} maps to~IP address
-\texttt{173.194.35.70}.\\
+\texttt{173.194.35.70}.
 
 Using well-known names~(services) brings one big advantage. When an~application
 crashes or exits, the~operating system kernel has a~responsibility to~close
@@ -540,10 +548,10 @@ This can be used by~other applications to~monitor the~lifetime of~an~application
 in~which they are interested or an~application they communicate with.
 
 To make a~particular method call on~a~particular object instance, a~number
-of~nested components have to~be named:\\
+of~nested components have to~be named:
 \addtodo{Fix typesetting}
 
-			\texttt{Address -> [Bus Name] -> Path -> Interface -> Method}\\
+			\texttt{Address -> [Bus Name] -> Path -> Interface -> Method}
 
 D-Bus methods may accept any number of~arguments
 and~may return any number of~values, including none. 
@@ -552,7 +560,7 @@ Bindings are used to~wrap low-level D-Bus C API calls to~the~higher level
 libraries or language constructs. To call a method in the GDbus binding we used
 for implementation of \textsc{Dfuzzer}, its name and arguments must be specified. Each
 argument of~a~method has its signature encoding as stated in~table
-\ref{tab:tab1}.\addtodo{Consider removing this table, it's a filler}\\
+\ref{tab:tab1}.\addtodo{Consider removing this table, it's a filler}
 
 \FloatBarrier
 \begin{table}[!h]
@@ -703,7 +711,7 @@ are pruned to~fit the~printable range.
 The~\emph{random module} also provides the~\texttt{NULL} terminated array of~strings,
 which will be sent to~a~tested process if it has any string parameters. Tester
 can include any valid UTF-8 strings inside this array including shell commands,
-bus names, object paths, interfaces or format strings.\\
+bus names, object paths, interfaces or format strings.
 
 \subsection{Automated API analysis using introspection}
 Before fuzz testing of~a~specified process, object introspection must be done
@@ -713,7 +721,7 @@ of~the~interfaces and~the~methods of~a~specified process. Returned XML file is
 processed into a structure which can be used to~find a~particular interface.
 The~\emph{introspection module} which is part of~\textsc{Dfuzzer} encapsulates all
 object introspection details and~provides an~interface for~easy iteration
-through methods and~their arguments.\\
+through methods and~their arguments.
 
 
 Every method argument signature is specified by~its
@@ -737,7 +745,7 @@ process status file \texttt{/proc/pid/status} to~be sure that a~tested process
 really crashed. If not, it means that a~tested process spent a~long time
 processing the~data received from~\textsc{Dfuzzer} and~so it did not responded
 to~the~method call from~\textsc{Dfuzzer} in~given timeout. When \textsc{Dfuzzer} finds out that
-a~tested process did not crash, testing continues.\\
+a~tested process did not crash, testing continues.
 
 
 In~the~case a~tested process crashed or exceeded a~specified memory limit,
@@ -817,7 +825,7 @@ interface and one method to the D-Bus daemon. We introduced memory leaking
 and buffer overflows to this test service on purpose and were testing
 the \textsc{Dfuzzer} accuracy to detect those faults.
 
-\subsection{Testing during the development of the tool}
+\subsection{Development testing}
 During the development of the \textsc{Dfuzzer} it was used on randomly chosen applications.
 These were GNOME Shell, IMSettings and Evince.
 
@@ -852,7 +860,7 @@ development process of the \textsc{Dfuzzer}, including:
 Finally Evince, a~document viewer for~multiple document formats was tested.
 We have not detected any bugs in its D-Bus interfaces by using the \textsc{Dfuzzer}.
 
-\subsection{Testing after the development of the tool}
+\subsection{Distribution-wide deployment}
 When the \textsc{Dfuzzer} implementation and functionality reached our requirements
 and stability we used it on testing the Red Hat Enterprise Linux 7 (RHEL7)
 GNU/Linux distribution. We tested all of the defaultly running applications
