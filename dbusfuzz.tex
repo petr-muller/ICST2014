@@ -60,6 +60,7 @@
 \usepackage{placeins}
 \usepackage{graphicx}
 \usepackage{epstopdf}
+\usepackage{hyperref}
 
 % use color package to make todos jump out in text
 \usepackage{color}
@@ -313,6 +314,8 @@
 % to submit to, of course. )
 
 
+
+
 % correct bad hyphenation here
 \hyphenation{op-tical net-works semi-conduc-tor}
 
@@ -423,17 +426,17 @@ callers.
 This structure means the D-Bus communicating programs are a good target for
 fuzz testing, which is well-suited for detecting bugs stemming from improper
 validation of input data. Fuzz testing (or simply fuzzing) is a~well-known type
-of~testing\cite{Fuzzing2,Fuzzing}: it it an automated, brute force, black-box
+of~testing\cite{Fuzzing2}: it it an automated, brute force, black-box
 technique, exploiting the~fact that many bugs in~software are caused
 by~handling inputs without applying proper validation routines on~those.
 Fuzzing is close to~the~boundary value analysis, where you create test values
 that infringe the~boundary of~known good and~bad values.  Fuzz testing has a
-long history of being applied in security area \addtodo{cite}, because
+long history of being applied in security area\cite{Fuzzing}, because
 the type of bugs it finds often has security implications: improper validation
 sometimes means there is a possibility to carefully craft the input so the
 program does something useful to the attacker. Outside the security testing
 domain, the technique was successfuly used for finding bugs in
-compilers\addtodo{cite}.
+compilers\cite{regehr11-compfuzz} and static analyzers\cite{regehr12-safuzz}.
 
 The advantage of fuzz testing is that the bug detection is easily automated: in
 the most basic form, the tool can just send random data as the input of the
@@ -801,6 +804,9 @@ loop, threads, dynamic loading, and an object system. GLib2 also provides GDBus
 bindings, so applications do not have to be written in low-level D-Bus C library
 and instead use the high-level advantages of GDBus binding and data types from GLib2.
 
+\subsection{Related work}
+\addtodo{None but a crude unused project, but we have to write something}
+
 
 \section{Results}
 \addtodo{Still very very rough. We need to present this much better.}
@@ -856,9 +862,9 @@ When the \textsc{Dfuzzer} implementation and functionality reached our requireme
 and stability we used it on testing the Red Hat Enterprise Linux 7 (RHEL7)
 GNU/Linux distribution. We tested all of the defaultly running applications
 on the system and the session bus daemons. Results were interesting as we found
-16 bugs and approximately half of them were more serious issues. The most
-critical bug found was the removal of root account which occured when we were
-fuzzing service provided by \emph{accountsservice} package. Other serious bugs
+16 bugs and approximately half of them were more serious issues.\addtodo{More
+details, maybe a table with bug classifications and origin} The most critical
+bug found was the removal of root account which occured when we were fuzzing service provided by \emph{accountsservice} package. Other serious bugs
 were crashes of services of these packages:
 \addtodo{Filler, present better}
 \begin{itemize}
@@ -928,10 +934,6 @@ additional input vectors of programs using D-Bus to unexpected data.
 We plan to deploy it for testing all programs in the Fedora GNU/Linux
 distribution, which use D-Bus for communication.
 
-\subsection{Further work}
-\addtodo{dbus signals}
-\addtodo{complicated data generation: arrays of structures of arrays...}
-
 \section*{Acknowledgment}
 \addtodo{Do we need an ack someone?}
 
@@ -961,16 +963,27 @@ distribution, which use D-Bus for communication.
 \begin{thebibliography}{1}
 
 \bibitem{Fuzzing}
-Michael~Sutton and Adam~Greene and Pedram~Amini, \emph{Fuzzing: Brute Force
+Michael~Sutton and Adam~Greene and Pedram~Amini. \emph{Fuzzing: Brute Force
 Vulnerability Discovery}, Addison-Wesley Professional, 2007.
 
 \bibitem{Fuzzing2}
-Ari~Takanen and Jared~DeMott and Charlie~Miller, \emph{Fuzzing for~Software
+Ari~Takanen and Jared~DeMott and Charlie~Miller. \emph{Fuzzing for~Software
 Security Testing and~Quality Assurance}, Artech House Print on~Demand, 2008.
 
 \bibitem{DBUS}
-Red Hat and the community, \emph{Software/dbus [online]}, freedesktop.org,
-2012-08-24 [cit. 2013-03-22], URL: \tt http://www.freedesktop.org/wiki/Software/dbus.
+Red Hat and the community. \emph{Software/dbus [online]}, freedesktop.org,
+2012-08-24 [cit. 2013-03-22],
+\url{http://www.freedesktop.org/wiki/Software/dbus}
+
+\bibitem{regehr11-compfuzz}
+Xuejun Yang, Yang Chen, Eric Eide, and John Regehr. \emph{Finding and
+Understanding Bugs in C Compilers}. In Proceedings of 32nd ACM SIGPLAN
+Conference on Programming Language Design and Implementation (PLDI 2011). San Jose, CA, USA, June 2011.
+
+\bibitem{regehr12-safuzz}
+Pascal Cuoq, Benjamin Monate, Anne Pacalet, Virgile Prevosto, John Regehr, Boris
+Yakobowski, and Xuejun Yang. \emph{Testing static analyzers with randomly
+generated programs}. Short paper in Proceedings of the 4th NASA Formal Methods Symposium (NFM 2012). Norfolk, Virginia, USA, April 2012. 
 
 \end{thebibliography}
 
