@@ -327,20 +327,18 @@ fuzzer for D-Bus using applications}}
 % author names and affiliations
 % use a multiple column layout for up to three different
 % affiliations
-\author{\IEEEauthorblockN{
-Mat\'{u}\v{s} Marfefka\IEEEauthorrefmark{1}\IEEEauthorrefmark{2}
-and Petr Muller\IEEEauthorrefmark{1}\IEEEauthorrefmark{2}
-}
+\author{\IEEEauthorblockN{Mat\'{u}\v{s} Marfefka and Petr Muller}
+\vspace{5pt}
 \IEEEauthorblockA{
-	\IEEEauthorrefmark{1}Red Hat Czech\\
+	Red Hat Czech\\
 	Purky\v{n}ova 99, Brno, Czech Republic\\
 	\{mmarhefk\textbar muller\}@redhat.com
 }
+\vspace{5pt}
 \IEEEauthorblockA{
-	\IEEEauthorrefmark{2}Faculty of Information Technology\\
+	Faculty of Information Technology\\
 	Brno University of Technology\\
 	Bo\v{z}et\v{e}chova 2, Brno, Czech Republic}
-\addtodo{This looks ugly. How to typeset double affiliations?}
 }
 
 % conference papers do not typically use \thanks and this command
@@ -425,12 +423,12 @@ callers.
 This structure means the D-Bus communicating programs are a good target for
 fuzz testing, which is well-suited for detecting bugs stemming from improper
 validation of input data. Fuzz testing (or simply fuzzing) is a~well-known type
-of~testing\cite{Fuzzing2, Fuzzing}: it it an automated, brute force, black-box
+of~testing\cite{Fuzzing2,Fuzzing}: it it an automated, brute force, black-box
 technique, exploiting the~fact that many bugs in~software are caused
 by~handling inputs without applying proper validation routines on~those.
 Fuzzing is close to~the~boundary value analysis, where you create test values
 that infringe the~boundary of~known good and~bad values.  Fuzz testing has a
-long history of being applied in security area \addtodo{citations!}, because
+long history of being applied in security area \addtodo{cite}, because
 the type of bugs it finds often has security implications: improper validation
 sometimes means there is a possibility to carefully craft the input so the
 program does something useful to the attacker. Outside the security testing
@@ -450,7 +448,6 @@ their content is generated, to see how the program validates the input beyond
 it simply being an XML.
 
 \section{DBus message bus}
-\addtodo{Trochu detailneji popsat, co je dbus, ale neprehanet}
 D-Bus was created to~provide IPC system with a single, unified protocol
 and~currently, it is used as default IPC mechanism for~exhanging data between
 applications in~desktop environments as for~example GNOME, KDE or Xfce (even
@@ -544,12 +541,6 @@ that an~application disconnected, it sends out notification messages to~all rema
 applications that the~disconnected application names have lost their owner.
 This can be used by~other applications to~monitor the~lifetime of~an~application
 in~which they are interested or an~application they communicate with.
-
-To make a~particular method call on~a~particular object instance, a~number
-of~nested components have to~be named:
-\addtodo{Fix typesetting}
-
-			\texttt{Address -> [Bus Name] -> Path -> Interface -> Method}
 
 D-Bus methods may accept any number of~arguments
 and~may return any number of~values, including none. 
@@ -753,7 +744,7 @@ a~method, a~log is created within~a~method entry. After a~log header there is a~
 an~event which occurred followed by~a~process memory size. The~last items in~log
 are the~inputs on~which an~event occured and~so the~arguments signatures
 with~the~corresponding values. An~example of~the~truncated log file from~fuzz
-testing the~\emph{GNOME Shell 3.6.3.1}:\addtodo{Fix layout. Smaller font?}
+testing the~\emph{GNOME Shell 3.6.3.1}:
 {
 \footnotesize
 \begin{verbatim}
@@ -812,6 +803,7 @@ and instead use the high-level advantages of GDBus binding and data types from G
 
 
 \section{Results}
+\addtodo{Still very very rough. We need to present this much better.}
 Test results were divided into two stages -- the testing which took place during
 the development of the tool and the testing after the development. Testing during
 the development stage was very important as we wanted the tool to ``learn''
@@ -859,6 +851,7 @@ Finally Evince, a~document viewer for~multiple document formats was tested.
 We have not detected any bugs in its D-Bus interfaces by using the \textsc{Dfuzzer}.
 
 \subsection{Distribution-wide deployment}
+\addtodo{We surely have much more to say about RH deployment}
 When the \textsc{Dfuzzer} implementation and functionality reached our requirements
 and stability we used it on testing the Red Hat Enterprise Linux 7 (RHEL7)
 GNU/Linux distribution. We tested all of the defaultly running applications
@@ -867,6 +860,7 @@ on the system and the session bus daemons. Results were interesting as we found
 critical bug found was the removal of root account which occured when we were
 fuzzing service provided by \emph{accountsservice} package. Other serious bugs
 were crashes of services of these packages:
+\addtodo{Filler, present better}
 \begin{itemize}
 	\item \emph{systemd}
 	\item \emph{avahi}
@@ -879,10 +873,61 @@ were crashes of services of these packages:
 \end{itemize}
 The less critical issues were memory leaks which were found for example in packages
 \emph{firewalld} and \emph{gdm}.
-\addtodo{Subsection (or section?) discussing bug problematics}
+
+
+\subsection{Developers sometimes think these problems are not real bugs\addtodo{A better title}}
+\addtodo{This is not really research, but poses an interesting deployment and
+software engineering problem, which should be desired in the testing tools
+track}
+In this section, we are discussing an interesting finding about the nature of
+defects discovered by \textsc{Dfuzzer}. In some cases, we met an opposition from
+the affected project developers, commenting that these reported issues are not
+real bugs. Such decisions were done mostly on the grounds of the D-Bus interface
+of the programs supposedly being an internal API, and therefore not necessary to be robust and handle any input. In other cases, the findings were acknowledged as bugs and promptly fixed. In our opinion, this speaks about the
+adoption of D-Bus communication usage in modern GNU/Linux desktop not being
+mature enough to have widely accepted best practices. The decision about the
+realistic need to sanitize inputs received via D-Bus is usually not done at all,
+but depends on the habit and preference of certain developer.
+
+We argue that we cannot speak of an internal API for applications receiving
+their inputs via D-Bus, especially not the crucial parts of the running system
+like GNOME Shell or systemd. Not sanitizing inputs means reliance that the other
+side of the communication behaves nicely and provides just the expected range of
+arguments. The problem is that any application, not just the one expected,
+having access to the appropriate message bus (so these problems generally does
+not have security implications, as there is no way to elevate privileges this
+way) may attempt to communicate with the other program listening on that bus.
+These programs may, by poor programming or by malice, supply any value permitted by the expected data type as an argument.
+When the receiving program does not do proper validation, a well-known situation
+happens where dirty data are processed by the program and anything may happen,
+from a program simply crashing to unintended and dangerous operations, like the
+described case of a root account removal. We argue that it should not be this
+easy to bring down key parts of a running system simply by passing them garbage
+via publicly facing interface.
+
+Reporting the defects found by \textsc{Dfuzzer} had a useful effect of bringing
+attention to the D-Bus messages being a standard input vector, which may need to
+be sanitized prior to using. With more testing and new defects reported, the
+discussions will likely lead to the creation of best practices and shared
+understanding of D-Bus usage principles.
 
 \section{Conclusion}
-\addtodo{Actually write this}
+In this paper, we presented \textsc{Dfuzzer}, a tool for fuzz testing
+applications receiving their input via D-Bus message bus, the emerging
+communication mechanism for modern GNU/Linux desktop systems. Applications
+receiving data through this message bus, in our opinion, provide a semi-public
+interface to any program running on the system, and therefore should validate
+received data in the same way as they should validate any other generally
+untrusted input. In our deployment of the tool, we found that many programs are
+not properly doing this, resulting in crashes, memory leaks and unintended
+behavior defects. \textsc{Dfuzzer} is able to expose these bugs.
+In the future, we plan to extend \textsc{Dfuzzer} to be able to generate even
+data of more complex data types. We also plan to enhance the tool to fuzz D-Bus signals, exposing the
+additional input vectors of programs using D-Bus to unexpected data.
+\textsc{Dfuzzer} is fully automated, which allows an easy deployment and usage.
+We plan to deploy it for testing all programs in the Fedora GNU/Linux
+distribution, which use D-Bus for communication.
+
 \subsection{Further work}
 \addtodo{dbus signals}
 \addtodo{complicated data generation: arrays of structures of arrays...}
