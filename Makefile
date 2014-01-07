@@ -4,4 +4,4 @@ dbusfuzz.pdf: dbusfuzz.tex
 	pdflatex dbusfuzz.tex
 
 clean:
-	rm -f *.out *.pdf *.log *.aux
+	rm -f *.out dbusfuzz.pdf *.log *.aux

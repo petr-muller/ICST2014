@@ -1,5 +1,5 @@
 *.log
 *.aux
-*.pdf
+dbusfuzz.pdf
 /dbusfuzz.synctex.gz
 /tmp
