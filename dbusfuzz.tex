@@ -364,20 +364,20 @@ important programs receiving data over D-Bus, it is important that they
 sanitize the inputs correctly. Unfortunately, it is often not the case, as
 demonstrated by serious bugs found by our fuzzing tool.
 
-\textsc{Dfuzzer} is fully automated: using D-Bus introspection, it is able to acquire
-the structure of the data the target program expects, and generate ballast
-data respecting this structure, so the target program starts using them
-incorrectly if it does not carefully validate it. We have found numerous bugs
-in various parts of the GNU/Linux operating system, including Gnome Shell and
-systemd. The bugs usually result in crashes, but we have found even some
-security sensitive issues as well as data-loss bugs.
+\textsc{Dfuzzer} is fully automated: using D-Bus introspection, it is able to
+acquire the structure of the parameters expected by the target program. It can
+then generate ballast data respecting this structure, so the target program
+starts using such data incorrectly if it does not carefully validate it.
+We have found numerous bugs in various parts of the GNU/Linux operating system,
+including GNOME Shell and systemd. The bugs usually result in crashes, but we
+have found even some security sensitive issues as well as data-loss bugs.
 
 In this paper, we briefly describe the eco-system related to D-Bus. We follow
 with the description of the tool. In the end, we present the application of the
 tool for the systematic testing of various operating system parts, and show the
 most interesting bugs we have found. We also discuss the software engineering
 aspects of fuzz testing D-Bus: we have met developer's opinions that the
-problems found do not constitute a valid bugs, because the D-Bus interface is
+problems found do not constitute valid bugs, because the D-Bus interface is
 actually an internal API. The discussion is interesting by showing that the
 D-Bus usage is not a fully mature area of engineering, and the programmers do
 not have a shared understanding of its purpose.
@@ -407,7 +407,7 @@ a~simple way to~talk to~one another. D-Bus is ``\emph{a~system for~\mbox{inter-p
 communication~(IPC) and~Remote Procedure Calling~(RPC) between
 processes running on the same machine and~makes it simple and~reliable to~code
 a~`single instance' application or daemon, and~to~launch applications and~daemons
-on~demand when their services are needed}''~\cite{DBUS}.
+on~demand when their services are needed}''~\cite{dbus}.
 
 Recently, D-Bus has become important part of~almost all GNU/Linux
 distributions. There are more and~more applications which use it for~IPC,
@@ -426,14 +426,14 @@ callers.
 This structure means the D-Bus communicating programs are a good target for
 fuzz testing, which is well-suited for detecting bugs stemming from improper
 validation of input data. Fuzz testing (or simply fuzzing) is a~well-known type
-of~testing\cite{Fuzzing2}: it it an automated, brute force, black-box
-technique, exploiting the~fact that many bugs in~software are caused
+of~testing\cite{miller90-fuzz}: it it an automated, brute force,
+black-box technique, exploiting the~fact that many bugs in~software are caused
 by~handling inputs without applying proper validation routines on~those.
 Fuzzing is close to~the~boundary value analysis, where you create test values
 that infringe the~boundary of~known good and~bad values.  Fuzz testing has a
-long history of being applied in security area\cite{Fuzzing}, because
-the type of bugs it finds often has security implications: improper validation
-sometimes means there is a possibility to carefully craft the input so the
+long history of being applied in security
+area\cite{takanen08-book,sutton07-book}, because the type of bugs it finds often
+has security implications: improper validation sometimes means there is a possibility to carefully craft the input so the
 program does something useful to the attacker. Outside the security testing
 domain, the technique was successfuly used for finding bugs in
 compilers\cite{regehr11-compfuzz} and static analyzers\cite{regehr12-safuzz}.
@@ -466,7 +466,7 @@ is built on~top of~a~general one-to-one message passing framework, which can be
 used by~any two applications to~communicate directly~(without going through
 the~message bus daemon). The~communicating applications are either on~one computer,
 or they communicate through unencrypted TCP/IP socket suitable for~use behind
-a~firewall~\cite{DBUS}.
+a~firewall~\cite{dbus}.
 
 D-Bus has several layers:
 \begin{itemize}
@@ -601,6 +601,8 @@ method returns serialized form of the introspection of an~object. The example of
 of~the~\texttt{/org/gnome/Shell} object by~calling tool for~working with~D-Bus
 objects, \texttt{gdbus}~(with some interfaces omitted for brevity, highlighted
 by dots):
+
+\newpage
 {\scriptsize
 \begin{verbatim}
 <node>
@@ -635,14 +637,14 @@ by dots):
     (...)
     <property type="b" name="OverviewActive"
         access="readwrite" />
-    <pro
-    perty type="s" name="ShellVersion"
+    <property type="s" name="ShellVersion"
         access="read" />
   </interface>
   (...)
 </node>
 \end{verbatim}
 }
+
 
 As seen from~object introspection, the~\texttt{/org/gnome/Shell} object has more
 interfaces~(object must have at~least one interface). Interfaces has methods
@@ -668,15 +670,23 @@ After determining the structure of the interface, the fuzzer starts to craft
 random calls of the provided methods. It creates pseudo-random values for
 arguments, but it adheres to the expected data type (so if the tested method
 expects a long integer as an argument, the fuzzer does not attempt to pass
-anything else than a long integer).
+anything else than a long integer). During these method calls, a target process
+is monitored in order to discover an improper reaction on a method call. The
+monitor detects if the target process ceases execution (which can indicate a
+crash) or significantly raises memory consumption (which may indicate a memory
+leak). Ability to detect a failure to respond or target's disconnection from the
+message bus is provided directly by the D-Bus infrastructure, so such situations
+are trivially detected too.
 
 \subsection{Architecture}
 \textsc{Dfuzzer} is dividedd into three major modules The \emph{random module} is
-responsible for~pseudo-random data generation. It can generate data for~every
-primitive method argument signature~(\ref{tab:tab1}), except complex data types
-as structures, arrays of~types and~dictionaries which were not implemented yet.
-It also saves generated data sizes to~be able to~give a~condition to~end fuzz
-testing of~a~method. The~\emph{introspection module} performs an~object
+responsible for~pseudo-random data generation. It can generate pseudo-random
+data instances for every primitive data type which can be used in D-Bus method
+arguments. It has certain implementation limits in generating complex data type
+instances, like structures. It also saves generated data sizes to~be able
+to~give a~condition to~end fuzz testing of~a~method. 
+
+The~\emph{introspection module} performs an~object
 introspection, requesting and processing an introspection file of~a~chosen
 object from~the~bus daemon. It also provides the capability to interate over
 discovered interfaces and methods.
@@ -686,9 +696,10 @@ to generate the arguments and calls the specified method. It can detect when
 the ~tested application does not respond or disconnects from~the~bus daemon.
 It also monitors (using \texttt{/proc/PID/status}\footnote{pid is process
 identification number} file) a~tested application process status to~be able
-to~confirm that a~tested application really disconnected from~the~bus daemon.
-Process status file is also used for~monitoring an~application process memory
-usage.
+to~confirm that a~tested application ended itself in some problematic way after
+disconnecting from~the~bus daemon. Process status file is also used
+for~monitoring an~application process memory usage in order to detect memory
+leaks after processing a message.
 
 \addtodo{Add the image, after re-fittin for 2-col layout}
 
@@ -696,9 +707,9 @@ usage.
 The~\emph{random module} provides functions for~generation of~all basic data
 types~(stated in~table \ref{tab:tab1}) except arrays, structures and~dictionaries
 which were not implemented. Besides pseudo-random numbers, the~\emph{random module} also generates
-a~specific boundary values of~number types.
-As \textsc{Dfuzzer} uses GDBus binding, the~functions in~the~\emph{random module} generate
-only valid UTF-8 strings. Pseudo-random characters which are used to~fill strings
+a~specific boundary values of~number types in order to perform a directed
+boundary value testing of target method. As \textsc{Dfuzzer} uses GDBus binding,
+the~functions in~the~\emph{random module} generate only valid UTF-8 strings. Pseudo-random characters which are used to~fill strings
 are pruned to~fit the~printable range.
 The~\emph{random module} also provides the~\texttt{NULL} terminated array of~strings,
 which will be sent to~a~tested process if it has any string parameters. Tester
@@ -748,6 +759,8 @@ an~event which occurred followed by~a~process memory size. The~last items in~log
 are the~inputs on~which an~event occured and~so the~arguments signatures
 with~the~corresponding values. An~example of~the~truncated log file from~fuzz
 testing the~\emph{GNOME Shell 3.6.3.1}:
+
+
 {
 \footnotesize
 \begin{verbatim}
@@ -783,103 +796,139 @@ with~well-known names on~the~session bus daemon. This means it needs to~own
 only a~unique name within~the~session bus.
 
 \subsection{Limitations}
-\addtodo{Using bindings limiting the scope of invalid messages to send}
-\addtodo{Cannot handle more complex arguments (structures)}
-\addtodo{D-Bus signals}
-\addtodo{Make this speak about future work too}
+The tool, in its current state, has several limitations. First of the
+limitations is that it is not able to generate a certain set of possible invalid
+D-Bus messages. This limitation is caused by our usage of the GDBus binding
+library, which does basic data type sanitization. Thus, it is not possible to
+send invalid D-Bus messages this way, although a program not using this binding
+would be able to do so, in theory. We do not see this limitation as very serious
+one, as it seems sufficient to generate valid D-Bus messages to create problems
+for programs. To explore program reactions on invalid D-Bus messages, it should
+be possible to either circumvent the binding totally, or at least modify the
+binding so it omits the validation.
+
+The second limitaton, in planning to be removed by further development, is the
+inability to generate pseudo-random arguments of more complex types, such as 
+structures, arrays and~dictionaries. This is just an implementation deficiency
+and we suppose implementation will bring better bug detection ability. 
+
+The final serious limitation is the current inability to create fuzzed D-Bus
+signals to test programs listening for these. \textsc{Dfuzzer} can currently
+test just D-Bus method calls. Because we see the programs handling signals as
+another interesting input vector, we also plan to rectify this limitation by
+further work.
 
 \subsection{Project details}
-The \textsc{Dfuzzer} is written in C with source code publicly
-available\footnote{https://github.com/matusmarhefka/dfuzzer} under the GNU GENERAL
-PUBLIC LICENSE Version 3. The work on project was done within the bachelors thesis
-and is the result of cooperation between Red Hat and Faculty of Information
-Technology in Brno.
+\textsc{Dfuzzer} is written in C language. The source code is publicly
+available\footnote{https://github.com/matusmarhefka/dfuzzer} under the GNU GPLv3 license.
+The initial work on the project was performed as a part of the bachelor thesis
+in cooperation of Red Hat Czech and Faculty of Information Technology.
 
-The source code uses two important libraries: libffi and glib2.
-Libffi is a foreign function interface library. It provides a pointer to a function
-that can accept and decode any combination of arguments defined at run time.
-GLib2 is the low-level core library which provides data structure handling for C,
-portability wrappers, and interfaces for such runtime functionality as an event
-loop, threads, dynamic loading, and an object system. GLib2 also provides GDBus
-bindings, so applications do not have to be written in low-level D-Bus C library
-and instead use the high-level advantages of GDBus binding and data types from GLib2.
+The tool uses two important external libraries:\texttt{libffi} and
+\texttt{GLib2}. \texttt{Libffi} is a foreign function interface library. It
+provides a pointer to a function that can accept and decode any combination of arguments defined at runtime.
+\texttt{GLib2} is the low-level core library which provides data structure
+handling for C, portability wrappers, and interfaces for runtime functionality
+such as an event loop, threads, dynamic loading and an object system.
+\texttt{GLib2} also provides GDBus bindings, so applications do not have to be
+written in low-level D-Bus C library and instead use the high-level advantages
+of GDBus binding and data types from \texttt{GLib2}.
 
 \subsection{Related work}
+\addtodo{BendyBus:
+\url{http://tecnocode.co.uk/2012/01/19/all-aboard-the-bendy-bus/}}
+\addtodo{DBus fuzzer:
+\url{https://chromium.googlesource.com/chromiumos/platform/dbusfuzz/+/master/dbusfuzz.py}}
 \addtodo{None but a crude unused project, but we have to write something}
 
 
 \section{Results}
 \addtodo{Still very very rough. We need to present this much better.}
-Test results were divided into two stages -- the testing which took place during
-the development of the tool and the testing after the development. Testing during
-the development stage was very important as we wanted the tool to ``learn''
-to detect all possible options which may occure during testing phase. This
-includes detecting exceptions from D-Bus daemons, memory leaking of tested
-applications and most importantly applications crashes. To accomplish this task
-we have written the test service which exports connection name, object path,
-interface and one method to the D-Bus daemon. We introduced memory leaking
-and buffer overflows to this test service on purpose and were testing
-the \textsc{Dfuzzer} accuracy to detect those faults.
-
-\subsection{Development testing}
-During the development of the \textsc{Dfuzzer} it was used on randomly chosen applications.
-These were GNOME Shell, IMSettings and Evince.
+We present two sets of experiment results of the tool. First experiment stage
+was to determine the ability of the tool to find bugs in real code and the
+usefulness of the provided defect reports. After the tool was mature enough and
+the ability to find real bugs was confirmed, we have adopted it to perform a
+testing campaign on the Red Hat Enterprise Linux operating system distribution.
+ 
+\subsection{Experiments on selected packages}
+The initial testing focused on the tool's ability to detect tested program
+crashes, leaking memory as well as exceptions from D-Bus daemons. We have tested
+this ability on a crafted D-Bus service exhibiting all this erroneous behavior.
+To confirm that \textsc{DFuzzer} is able to detect these issues even in
+real-world software, we have selected three mature components of the GNU/Linux
+desktop for further testing: GNOME Shell, IMSetting and Evince. 
 
 GNOME Shell is the~core user interface of~the~GNOME desktop environment
 providing basic functionality like switching between windows and~launching
-applications. We have chosen GNOME Shell as we are the common users of this
-desktop shell and it was relatively new technology. By testing its D-Bus
-interfaces we found these bugs:
-\begin{itemize}
-	\item bug which crashed the GNOME Shell
-	\item bug which caused the whole GNOME desktop session termination
-\end{itemize}
-When we reoported these bugs on GNOME Bugzilla, the~approach of~the~GNOME
-developers to~the~reported bugs was lax. One of~them commented that the~values
-given to~the~tested methods are not valid, so it is almost legit
-the~GNOME Shell crashes in~this case and~that the~tested methods are
-in~a~private interface used only by~certain GNOME applications. These facts may
-be true, but still letting the~application to~crash is not a~good programming
-practice.
+applications. We have chosen GNOME Shell as it is a prominent user if D-Bus
+communication, a key part of the desktop, and it was under heavy development
+at the time.
+By testing its D-Bus interfaces we immedately found it does not validate its
+input data, and managed to crash not only the GNOME Shell process, but also
+(with different input) whole GNOME desktop session instance.
 
-IMSettings is a~framework that delivers input method settings and~applies the~changes
-immediately, so it will take an~effect without~restarting applications
-and~the~desktop. This application was chosen because it process inputs
-from different languages and we found the most bugs in this application during
-development process of the \textsc{Dfuzzer}, including:
-\begin{itemize}
-	\item 3 bugs related to crashes
-	\item memory leaks -- the biggest leaking of IMSettings detected was when it
-		used 146.6 times more memory than its initial memory on start
-\end{itemize}
+Both these bugs were reported to the GNOME Bugzilla\addtodo{a link?}, and we met
+some resistance about whether these crashes actually constitute real bugs, because
+the D-Bus interface is intended to be used only by certain GNOME components which behave
+nicely. As we encountered more such discussions in further bug reporting, we
+discuss this situation in a separate section below, because we think it is an
+interesting software engineering issue on its own.
 
-Finally Evince, a~document viewer for~multiple document formats was tested.
-We have not detected any bugs in its D-Bus interfaces by using the \textsc{Dfuzzer}.
+Next selected application was IMSettings is a~framework that handles input
+method settings and~immediately propagages a change after it is done, so it will
+take effect without~restarting applications and~the~desktop. This application
+was chosen because it processes inputs from different languages.
+\addtodo{originally: \ldots we found the most bugs\ldots: how many exactly?
+originally: \ldots including \ldots: what else?}. We discovered IMSettings does
+not validate inputs as well: we found many potential defects, including three
+different inputs crashing the program. We have also found few potential memory
+leaks. \addtodo{originally: used 146.6 times more memory than its initial memory
+on start: how much exactly? do we have better numbers?}.
+
+Evince, a~document viewer for~multiple document formats was tested with
+\textsc{Dfuzzer} as well. We have not detected any bugs in its D-Bus interfaces.
 
 \subsection{Distribution-wide deployment}
 \addtodo{We surely have much more to say about RH deployment}
 When the \textsc{Dfuzzer} implementation and functionality reached our requirements
-and stability we used it on testing the Red Hat Enterprise Linux 7 (RHEL7)
-GNU/Linux distribution. We tested all of the defaultly running applications
-on the system and the session bus daemons. Results were interesting as we found
-16 bugs and approximately half of them were more serious issues.\addtodo{More
-details, maybe a table with bug classifications and origin} The most critical
-bug found was the removal of root account which occured when we were fuzzing service provided by \emph{accountsservice} package. Other serious bugs
-were crashes of services of these packages:
-\addtodo{Filler, present better}
-\begin{itemize}
-	\item \emph{systemd}
-	\item \emph{avahi}
-	\item \emph{colord}
-	\item \emph{gnome-session}
-	\item \emph{gnome-settings-daemon}
-	\item \emph{gjs}
-	\item \emph{kde-workspace}
-	\item \emph{kde-runtime}
-\end{itemize}
-The less critical issues were memory leaks which were found for example in packages
-\emph{firewalld} and \emph{gdm}.
+and stability, it was used to perform a testing campaign on a Red Hat Enterprise
+Linux distribution of GNU/Linux. The target was to test all D-Bus communicating
+applications in the default installation of the operating system, which are
+running by default and listening on either a system or a session bus
+daemons (so there is still a large space for further testing, as many of the
+distribution components are not installed or running by default).
 
+Even in this limited campaing, we found 16 bugs.\addtodo{approximately half of
+them were more serious issues\ldots More details, maybe a table with bug
+classifications and origin}, some of them serious. The most critical bug found
+was a removal of a root account, occuring during fuzz testing a service
+provided by the \emph{accountsservice} package. The fuzzer ran with sufficient
+privileges to do this, so although this is not a security issue, it
+is still serious enough as the D-Bus vector circumvents the protection the
+appropriate client tool for account management has for this special case.
+
+\FloatBarrier
+\begin{table}[!h]
+\caption{Bugs found in RHEL packages}
+\label{tab:foundbugs}
+\begin{center}
+	\begin{tabular}{|l|c|l|}
+	\hline
+	\textbf{Package} & \textbf{Bug count} & \textbf{Bug types} \\ \hline \hline
+	systemd & & \\ \hline
+	avahi & & \\ \hline
+	colord & & \\ \hline
+	firewalld & & memory leaks \\ \hline
+	gdm & & memory leaks \\ \hline
+	gnome-session & & \\ \hline
+	gnome-settings-daemon & & \\ \hline
+	gjs & & \\ \hline
+	kde-workspace & & \\ \hline
+	kde-runtime & & \\ \hline
+	\end{tabular}
+\end{center}
+\end{table}
+\FloatBarrier
 
 \subsection{Developers sometimes think these problems are not real bugs\addtodo{A better title}}
 \addtodo{This is not really research, but poses an interesting deployment and
@@ -936,6 +985,7 @@ distribution, which use D-Bus for communication.
 
 \section*{Acknowledgment}
 \addtodo{Do we need an ack someone?}
+\addtodo{Fix bibs}
 
 
 % trigger a \newpage just before the given reference
@@ -962,15 +1012,15 @@ distribution, which use D-Bus for communication.
 % (used to reserve space for the reference number labels box)
 \begin{thebibliography}{1}
 
-\bibitem{Fuzzing}
+\bibitem{sutton07-book}
 Michael~Sutton and Adam~Greene and Pedram~Amini. \emph{Fuzzing: Brute Force
 Vulnerability Discovery}, Addison-Wesley Professional, 2007.
 
-\bibitem{Fuzzing2}
+\bibitem{takanen08-book}
 Ari~Takanen and Jared~DeMott and Charlie~Miller. \emph{Fuzzing for~Software
 Security Testing and~Quality Assurance}, Artech House Print on~Demand, 2008.
 
-\bibitem{DBUS}
+\bibitem{dbus}
 Red Hat and the community. \emph{Software/dbus [online]}, freedesktop.org,
 2012-08-24 [cit. 2013-03-22],
 \url{http://www.freedesktop.org/wiki/Software/dbus}
@@ -983,7 +1033,12 @@ Conference on Programming Language Design and Implementation (PLDI 2011). San Jo
 \bibitem{regehr12-safuzz}
 Pascal Cuoq, Benjamin Monate, Anne Pacalet, Virgile Prevosto, John Regehr, Boris
 Yakobowski, and Xuejun Yang. \emph{Testing static analyzers with randomly
-generated programs}. Short paper in Proceedings of the 4th NASA Formal Methods Symposium (NFM 2012). Norfolk, Virginia, USA, April 2012. 
+generated programs}. Short paper in Proceedings of the 4th NASA Formal Methods Symposium (NFM 2012). Norfolk, Virginia, USA, April 2012.
+
+\bibitem{miller90-fuzz}
+B.P. Miller, L. Fredriksen, and B. So. \emph{An Empirical
+Study of the Reliability of UNIX Utilities}. Communications of the ACM 33, 12
+(December 1990)
 
 \end{thebibliography}
 
