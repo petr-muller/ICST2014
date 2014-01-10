@@ -355,14 +355,10 @@
 \begin{abstract}
 We present \textsc{Dfuzzer}, a fully automated tool for fuzz testing
 programs communicating via D-Bus. D-Bus is the prevalent modern mechanism for an
-inter-process communication in GNU/Linux ecosystem. With the GNU/Linux systems
-generally going towards tighter and better integrated systems, even the basic
-building stones of the operating systems start using D-Bus for communication. A
-good example of such operating system component is systemd, the modern GNU/Linux
-system and service manager. With these important programs receiving data over
-D-Bus, it is necessary that they sanitize the inputs correctly.
-Unfortunately, it is often not the case as demonstrated by severe bugs found
-by the presented fuzzing tool.
+inter-process communication in GNU/Linux ecosystem. Programs receiving data over
+D-Bus should sanitize the inputs correctly as it may come from any application
+having access to the message bus. Unfortunately, it is often not the case as
+demonstrated by severe bugs found by the presented fuzzing tool.
 
 \textsc{Dfuzzer} is fully automated: using D-Bus introspection, it is able to
 acquire the structure of the parameters expected by the target program. It can
@@ -370,19 +366,13 @@ then generate ballast data respecting this structure, so the target program
 starts using such data incorrectly if it does not carefully validate it.
 We have found numerous bugs in various parts of the GNU/Linux operating system,
 including GNOME Shell and systemd. The bugs usually result in crashes, but we
-have found even some security sensitive issues as well as data-loss bugs.
+have found other bugs like memory leaks and some data-loss bugs.
 
-In this paper, we briefly describe the eco-system related to D-Bus. We follow
-with the description of the tool. In the end, we present the application of the
-tool for the systematic testing of an operating system, and show the
-most interesting bugs we have found. We also discuss the software engineering
-aspects of fuzz testing D-Bus services. We have met developer opinions that the
-problems found do not constitute valid bugs, because the D-Bus interface is
+We also discuss the software engineering aspects of fuzz testing D-Bus services.
+We have met developer opinions that the problems found do not constitute valid bugs, because the D-Bus interface is
 actually an internal API. The discussion is interesting by showing that the
 D-Bus usage is not a fully mature area of engineering, and the programmers do
 not have a shared understanding of its purpose.
-\addtodo{The abstract is very long. Prune?}
-\addtodo{Re-check after finishing the text}
 \end{abstract}
 
 \begin{keywords}
@@ -410,9 +400,9 @@ a~`single instance' application or daemon, and~to~launch applications and~daemon
 on~demand when their services are needed}''~\cite{dbus}.
 
 Recently, D-Bus has become important part of~almost all GNU/Linux
-distributions. There are more and~more applications which use it for~IPC,
-including key system parts like service managers. The growing importance is witnessed
-by the recent inclusion of the D-Bus message bus directly into the Linux kernel
+distributions. There is an increasing number of applications which use it
+for~IPC, including key system parts like \textit{systemd} service manager. The
+growing importance is witnessed by the recent inclusion of the D-Bus message bus directly into the Linux kernel
 upstream.
 
 Applications communicating via D-Bus either provide interfaces which contain callable
@@ -450,7 +440,24 @@ parser. Instead, a valid XML containing random elements and their content is
 generated, to see how the program validates the input beyond it simply being an
 XML.
 
+In this paper, we present \textsc{Dfuzzer}, a fully automated tool for fuzz
+testing D-Bus services. \textsc{Dfuzzer} can automatically discover buses,
+objects, interfaces and method signatures, so there is no need for difficult
+configuration of the tool, although it can easily be focused on just the desired
+entities in the system. Careful sanitization of the data received via D-Bus
+message is often neglected, and in some cases even thought as unecessary. One of
+the discussed interesting lessons learned by the deployment of
+\textsc{Dfuzzer} is the lack of best practices and shared understanding about
+D-Bus usage by developers.
+
+The paper is organized as follows. First, we give a brief introduction to D-Bus
+message bus infrastructure. Section \ref{sec:C} descibes \textsc{Dfuzzer} and compares
+it to related tools. We present our results from two deployment stages in
+section \ref{sec:D}, where we also discuss the software engineering aspects of
+discovered defects and an experience we had during their reporting and repair.
+
 \section{D-Bus message bus}
+\label{sec:B}
 D-Bus was created to~provide IPC system with a single, unified protocol
 and~currently, it is used as default IPC mechanism for~exchanging data between
 applications in~desktop environments as for~example GNOME, KDE or Xfce (even
@@ -482,15 +489,15 @@ D-Bus has several layers:
 
 \begin{figure}[h]
 \centering
-\label{fig:dbus_image}
 \includegraphics[width=\columnwidth]{dbus_overview.pdf}
 \caption{D-Bus overview}
+\label{fig:dbus_image}
 \end{figure}
 
 
 D-Bus contains the~bus daemons which act as~routers for~messages. Processes
 can connect to~the~bus daemons to~use their routing services as stated
-in Fig.~\ref{fig:dbus_image}. There are two standard buses:
+in Figure~\ref{fig:dbus_image}. There are two standard buses:
 the~system bus and~the~session bus.
 
 
@@ -631,6 +638,7 @@ and~signature string.
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Tool description}
+\label{sec:C}
 The goal for the presented tool was to fuzz D-Bus clients (the programs using
 D-Bus message bus as a communication mean), not the D-Bus message bus itself.
 While bringing down the message bus would cause a severe harm to a running
@@ -845,7 +853,7 @@ use the high-level advantages of GDBus binding and data types from
 \subsection{Related work}
 Our motivation for creating the tool was the fact there is no general,
 well described fuzzer already existing. The only comparable tool available is
-dbusfuzz.py~\footnote{\url{https://chromium.googlesource.com/chromiumos/platform/dbusfuzz/+/master/dbusfuzz.py}},
+\texttt{dbusfuzz.py}~\footnote{\url{https://chromium.googlesource.com/chromiumos/platform/dbusfuzz/+/master/dbusfuzz.py}},
 implemented as part of the Chromium project by Google. All reasoning about this
 tool had to be made from its code, as there is no documentation or publication
 available. In purpose, it seems to be similar to that of \textsc{Dfuzzer}. It
@@ -859,35 +867,44 @@ tools is present in Table \ref{tab:differences}.
 \begin{center}
 	\begin{tabular}{|l|c|c|}
 	\hline
-	\textbf{Property} & \textbf{Dfuzzer} & \textbf{Dbusfuzz} \\ \hline \hline
+	\textbf{Property} & \textbf{Dfuzzer} & \textbf{dbusfuzz.py} \\ \hline \hline
 	Language & C with GLib2 & Python \\ \hline
-	Error messages & human readable errors & python tracebacks \\ \hline
-	Configurability & bus name, object path, & bus name, object path, \\
-		(what can be & interface and method & interface, method \\
-		specified) & & and its arguments\\ \hline
+	Fuzzing approach & generation & mutation \\ \hline
+	Interface discovery & yes & no \\
 	Continue on crash & yes & no \\ \hline
-	Possibility to specify & only string arguments & \\
-		method arguments & in global array & yes \\ \hline
+	Configurability & bus, interface & bus, interface  \\
+	 & object, method & object, method \\
+	 & strings arguments & all arguments \\ \hline
+	Error messages & Human readable errors & Python tracebacks \\ \hline
+ 
 	\end{tabular}
 \end{center}
 \end{table}
 \FloatBarrier
 
-It mostly seems that dbusfuzz.py is designed to be used programatically from the
-outside (as it consumes YAML as input and emits failures as Python tracebacks),
-so it is basically a functional subset of \textsc{Dfuzzer}.
+It mostly seems that \textsc{dbusfuzz.py} is designed to be used programatically
+(as it consumes YAML as input and emits failures as Python tracebacks), so it is basically a functional subset of \textsc{Dfuzzer}. The main advantage
+of \textsc{Dfuzzer} is the ability to automatically discover interfaces using
+introspection, whereas \texttt{dbusfuzz.py} needs a test plan specified in YAML
+input.
+It is also less robust and terminates on first defect found. \textsc{Dfuzzer} can
+continue testing after finding a defect by re-executing the target. The tools
+also differ in fuzzing approach. \textsc{Dfuzzer} generates data entirely
+pseudo-randomly. \texttt{dbusfuzz.py} uses a mutation approach, where it mutates
+values given initially in the test plan.
 
-Dfuzzer can also auto test all of bus name objects, interfaces and methods.
-Dbusfuzz can do this too, but everything must be specified in fuzz plan file
-in YAML format, including all methods arguments initial values.
 
-BendyBus\footnote{\url{http://tecnocode.co.uk/2012/01/19/all-aboard-the-bendy-bus/}} is an another fuzzing tool for fuzz testing applications. Dfuzzer is fuzz
-testing services (basically servers) and is acting like a client application.
-In contrast with Dfuzzer, BendyBus simulates a D-Bus service by providing its
-interfaces and methods and let applications to communicate with it. It targets
-the client applications and so its purpose is different as the purpose of Dfuzzer.
+BendyBus\footnote{\url{http://tecnocode.co.uk/2012/01/19/all-aboard-the-bendy-bus/}}
+is another tool for fuzz testing applications. Opposed to \textsc{Dfuzzer},
+which tests D-Bus services (which are similar to servers), BendyBus targets
+users/clients of these services. BendyBus simulates a D-Bus service by mocking
+its interfaces and methods, and responds to clients with fuzzed messages. It
+targets the client applications and so its purpose is different from the
+purpose of Dfuzzer. In full testing of whole D-Bus eco-system in a operating system
+distribution, \textsc{Dfuzzer} and BendyBus might complement each other nicely.
 
 \section{Results}
+\label{sec:D}
 We present two sets of experiment results of the tool. First experiment stage
 was to determine the ability of the tool to find bugs in real code and the
 usefulness of the provided defect reports. After the tool was mature enough and
@@ -1032,9 +1049,7 @@ more complex data types. We also plan to enhance the tool to fuzz D-Bus
 signals, exposing the additional input vectors of programs using D-Bus to
 unexpected data.  \textsc{Dfuzzer} is fully automated, which allows an easy
 deployment and usage.  We plan to deploy it for testing all programs in the
-Fedora GNU/Linux distribution, which use D-Bus for communication. As oppposed to
-Red Hat Enterprise Linux distribution focused on servers, Fedora contains many
-additional modern desktop applications providing services via D-Bus.
+Fedora GNU/Linux distribution, which use D-Bus for communication.
 
 \addtodo{Fix bibs}
 
