@@ -911,7 +911,8 @@ By testing its D-Bus interfaces we immediately found it does not validate its
 input data, and managed to crash not only the GNOME Shell process, but also
 (with a different input) whole GNOME desktop session instance.
 
-Both defects were reported to the GNOME Bugzilla\addtodo{a link?}, and we met
+Both these bugs were reported to the GNOME Bugzilla\footnote{
+\url{https://bugzilla.gnome.org/show_bug.cgi?id=699752}}, and we met
 some resistance about whether these crashes actually constitute real bugs, because
 the D-Bus interface is intended to be used only by certain GNOME components which behave
 nicely. As we encountered more such discussions in further bug reporting, we
@@ -921,14 +922,11 @@ interesting software engineering issue on its own.
 The next target selected for testing was IMSettings, a~framework handing input
 method settings in a way that any change is propagated immediately and takes
 effect without~restarting applications and~a~desktop session. This application
-was chosen because it is supposed to process inputs in different human
-languages.
-\addtodo{originally: \ldots we found the most bugs\ldots: how many exactly?
-originally: \ldots including \ldots: what else?}. We discovered IMSettings does
-not validate inputs as well: we found many potential defects, including three
-different inputs crashing the program. We have also found few potential memory
-leaks. \addtodo{originally: used 146.6 times more memory than its initial memory
-on start: how much exactly? do we have better numbers?}.
+was chosen because it is processing inputs from different human languages.
+We discovered IMSettings does not validate inputs as well as we found 6 bugs
+including three different inputs crashing the program. We have also found few
+potential memory leaks. The biggest leak caused memory usage to raise 146.6
+times (from IMSettings daemon initial memory which was 748 kB to 107 MB).
 
 Evince, which is a~document viewer for~multiple document formats, was tested
 with \textsc{Dfuzzer} as well. We have not detected any bugs in its D-Bus interfaces.
@@ -940,16 +938,14 @@ Linux distribution of GNU/Linux. The target was to test all D-Bus services in
 the full installation of the operating system, listening on either a system or a
 session bus daemon.
 
-Even in this limited campaign, we found 16 bugs.\addtodo{approximately half of
-them were more serious issues\ldots More details, maybe a table with bug
-classifications and origin}, some of them severe.
+Even in this limited campaign, we found 31 bugs in 16 packages from total 32
+packages which provide services on D-Bus daemons.
 
-The most critical bug found
-was a removal of a root account, occurring during fuzz testing a service
-provided by the \emph{accountsservice} package. The fuzzer ran with sufficient
-privileges to do this, so although this is not a security issue, it
-is still serious enough as the D-Bus vector circumvents the protection the
-appropriate client tool for account management has for this special case.
+The most critical bug found was a removal of a root account, occurring during
+fuzz testing a service provided by the \emph{accountsservice} package. The fuzzer
+ran with sufficient privileges to do this, so although this is not a security
+issue, it is still serious enough as the D-Bus vector circumvents the protection
+the appropriate client tool for account management has for this special case.
 
 \FloatBarrier
 \begin{table}[!h]
@@ -959,16 +955,23 @@ appropriate client tool for account management has for this special case.
 	\begin{tabular}{|l|c|l|}
 	\hline
 	\textbf{Package} & \textbf{Bug count} & \textbf{Bug types} \\ \hline \hline
-	systemd & & \\ \hline
-	avahi & & \\ \hline
-	colord & & \\ \hline
-	firewalld & & memory leaks \\ \hline
-	gdm & & memory leaks \\ \hline
-	gnome-session & & \\ \hline
-	gnome-settings-daemon & & \\ \hline
-	gjs & & \\ \hline
-	kde-workspace & & \\ \hline
-	kde-runtime & & \\ \hline
+	accountsservice & 5 & removal of root, memory leaks \\ \hline
+	systemd & 2 & crashes \\ \hline
+	avahi & 2 & crashes \\ \hline
+	colord & 2 & crashes, memory leaks \\ \hline
+	firewalld & 3 & memory leaks \\ \hline
+	abrt & 1 & memory leaks \\ \hline
+	gdm & 1 & memory leaks \\ \hline
+	gnome-shell & 1 & crashes \\ \hline
+	gnome-session & 1 & crashes \\ \hline
+	gnome-desktop3 & 1 & crashes \\ \hline
+	gjs & 1 & crashes \\ \hline
+	tracker & 1 & memory leaks \\ \hline
+	imsettings & 6 & crashes, memory leaks \\ \hline
+	kde-workspace & 1 & crashes \\ \hline
+	kde-runtime & 2 & crashes, memory leaks \\ \hline
+	polkit-kde & 1 & memory leaks \\ \hline
+	\textbf{Bugs total} & \textbf{31} & \\ \hline 
 	\end{tabular}
 \end{center}
 \end{table}
