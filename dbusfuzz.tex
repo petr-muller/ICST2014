@@ -632,10 +632,9 @@ and~signature string.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Tool description}
 The goal for the presented tool was to fuzz D-Bus clients (the programs using
-D-Bus message bus as a communication mean), not the D-Bus message bus itself. While
-that would be a worthy goal on its own, for bringing down the message bus
-would cause a severe harm to a running system, it is out of scope for our
-intentions, as it would require a totally different approach.
+D-Bus message bus as a communication mean), not the D-Bus message bus itself.
+While bringing down the message bus would cause a severe harm to a running
+system, it is out of scope for our intentions, as it would require a totally different approach.
 
 \textsc{Dfuzzer} is implemented as a standard D-Bus client. It simply connects
 to a message bus (either a session-level or a system-level one) and it calls
@@ -646,9 +645,7 @@ process connected to a bus and using well-known name can be fuzz tested.
 
 After determining the structure of the interface, the fuzzer starts to craft
 random calls of the provided methods. It creates pseudo-random values for
-arguments, but it adheres to the expected data type (so if the tested method
-expects a long integer as an argument, the fuzzer does not attempt to pass
-anything else than a long integer). During these method calls, a target process
+arguments, but it adheres to the expected data type. During these method calls, a target process
 is monitored in order to discover an improper reaction to a method call. The
 monitor detects if the target process ceases execution (which can indicate a
 crash) or significantly raises memory consumption (which may indicate a memory
@@ -794,8 +791,7 @@ only a~unique name within~the~session bus.
 
 
 \subsection{Limitations and further plans}
-The tool, in its current state, has several limitations. First of the
-limitations is that it is not able to generate some possible invalid D-Bus
+The tool, in its current state, has several limitations. It is not able to generate some possible invalid D-Bus
 messages, like using invalid UTF-8 strings as arguments. This limitation is
 caused by our usage of the GDBus binding library, which does basic data type
 sanitization. Thus, it is not possible to send invalid D-Bus messages this way,
@@ -810,7 +806,7 @@ validation.
 The second limitation, planned to be removed by further development, is the
 inability to generate pseudo-random arguments of more complex types, such as 
 structures, arrays and~dictionaries. This is just an implementation deficiency
-and we suppose its implementation will bring a better bug detection ability. 
+and we expect the rectification to bring a better bug detection ability. 
 
 
 The final serious limitation is the current inability to create fuzzed D-Bus
@@ -847,16 +843,14 @@ use the high-level advantages of GDBus binding and data types from
 \texttt{Glib2}.
 
 \subsection{Related work}
-BendyBus\footnote{\url{http://tecnocode.co.uk/2012/01/19/all-aboard-the-bendy-bus/}}
-is an another fuzzing tool for fuzz testing applications. Dfuzzer is fuzz
-testing services (basically servers) and is acting like a client application.
-In contrast with Dfuzzer, BendyBus simulates a D-Bus service by providing its
-interfaces and methods and let applications to communicate with it. It targets
-the client applications and so its purpose is different as the purpose of Dfuzzer.
-
-Dbusfuzz\footnote{\url{https://chromium.googlesource.com/chromiumos/platform/dbusfuzz/+/master/dbusfuzz.py}} is a D-Bus fuzzer implemented in Python by Google. Basically it does
-the same thing as Dfuzzer. Its target is also fuzzing of services and comparsion
-of the two tools can be seen in table \ref{tab:differences}.
+Our motivation for creating the tool was the fact there is no general,
+well described fuzzer already existing. The only comparable tool available is
+dbusfuzz.py~\footnote{\url{https://chromium.googlesource.com/chromiumos/platform/dbusfuzz/+/master/dbusfuzz.py}},
+implemented as part of the Chromium project by Google. All reasoning about this
+tool had to be made from its code, as there is no documentation or publication
+available. In purpose, it seems to be similar to that of \textsc{Dfuzzer}. It
+also targets D-Bus services. The comparsion of the main features of these two
+tools is present in Table \ref{tab:differences}. 
 
 \FloatBarrier
 \begin{table}[!h]
@@ -879,13 +873,21 @@ of the two tools can be seen in table \ref{tab:differences}.
 \end{table}
 \FloatBarrier
 
+It mostly seems that dbusfuzz.py is designed to be used programatically from the
+outside (as it consumes YAML as input and emits failures as Python tracebacks),
+so it is basically a functional subset of \textsc{Dfuzzer}.
+
 Dfuzzer can also auto test all of bus name objects, interfaces and methods.
 Dbusfuzz can do this too, but everything must be specified in fuzz plan file
 in YAML format, including all methods arguments initial values.
 
+BendyBus\footnote{\url{http://tecnocode.co.uk/2012/01/19/all-aboard-the-bendy-bus/}} is an another fuzzing tool for fuzz testing applications. Dfuzzer is fuzz
+testing services (basically servers) and is acting like a client application.
+In contrast with Dfuzzer, BendyBus simulates a D-Bus service by providing its
+interfaces and methods and let applications to communicate with it. It targets
+the client applications and so its purpose is different as the purpose of Dfuzzer.
 
 \section{Results}
-\addtodo{Still very very rough. We need to present this much better.}
 We present two sets of experiment results of the tool. First experiment stage
 was to determine the ability of the tool to find bugs in real code and the
 usefulness of the provided defect reports. After the tool was mature enough and
@@ -909,7 +911,7 @@ By testing its D-Bus interfaces we immediately found it does not validate its
 input data, and managed to crash not only the GNOME Shell process, but also
 (with a different input) whole GNOME desktop session instance.
 
-Both these bugs were reported to the GNOME Bugzilla\addtodo{a link?}, and we met
+Both defects were reported to the GNOME Bugzilla\addtodo{a link?}, and we met
 some resistance about whether these crashes actually constitute real bugs, because
 the D-Bus interface is intended to be used only by certain GNOME components which behave
 nicely. As we encountered more such discussions in further bug reporting, we
@@ -919,8 +921,8 @@ interesting software engineering issue on its own.
 The next target selected for testing was IMSettings, a~framework handing input
 method settings in a way that any change is propagated immediately and takes
 effect without~restarting applications and~a~desktop session. This application
-was chosen because it is processing inputs from different
-languages\addtodo{programmiong or human}.
+was chosen because it is supposed to process inputs in different human
+languages.
 \addtodo{originally: \ldots we found the most bugs\ldots: how many exactly?
 originally: \ldots including \ldots: what else?}. We discovered IMSettings does
 not validate inputs as well: we found many potential defects, including three
@@ -932,19 +934,17 @@ Evince, which is a~document viewer for~multiple document formats, was tested
 with \textsc{Dfuzzer} as well. We have not detected any bugs in its D-Bus interfaces.
 
 \subsection{Distribution-wide deployment}
-\addtodo{We surely have much more to say about RH deployment}
 When the \textsc{Dfuzzer} implementation and functionality reached our requirements
 and stability, it was used to perform a testing campaign on a Red Hat Enterprise
-Linux distribution of GNU/Linux. The target was to test all D-Bus communicating
-applications in the default installation of the operating system, which are
-running by default and listening on either a system or a session bus
-daemon (so there is still a large space for further testing, as many of the
-distribution components are not installed or running by default)\addtodo{is
-gnome and kde really installed both by default? Was this a full installation?}.
+Linux distribution of GNU/Linux. The target was to test all D-Bus services in
+the full installation of the operating system, listening on either a system or a
+session bus daemon.
 
 Even in this limited campaign, we found 16 bugs.\addtodo{approximately half of
 them were more serious issues\ldots More details, maybe a table with bug
-classifications and origin}, some of them serious. The most critical bug found
+classifications and origin}, some of them severe.
+
+The most critical bug found
 was a removal of a root account, occurring during fuzz testing a service
 provided by the \emph{accountsservice} package. The fuzzer ran with sufficient
 privileges to do this, so although this is not a security issue, it
@@ -974,19 +974,17 @@ appropriate client tool for account management has for this special case.
 \end{table}
 \FloatBarrier
 
-\subsection{Developers sometimes think these problems are not real bugs\addtodo{A better title}}
-software engineering problem, which should be desired in the testing tools
-In this section, we are discussing an interesting finding about the nature of
-defects discovered by \textsc{Dfuzzer}. In some cases, we met an opposition
+\subsection{Software development implications}
+In this section, we discuss an interesting finding about the
+nature of defects discovered by \textsc{Dfuzzer}. In some cases, we met an opposition
 from the affected project developers, commenting that these reported issues are
-not real bugs. Such decisions were done mostly on the grounds of the D-Bus
-interface of the programs supposedly being an internal API, and therefore not
-necessary to be robust and handle any input. In other cases, the findings were
-acknowledged as bugs and promptly fixed. In our opinion, this speaks about the
-adoption of D-Bus communication usage in modern GNU/Linux desktop not being
-mature enough to have widely accepted best practices. The decision about the
-realistic need to sanitize inputs received via D-Bus is usually not done at
-all, but depends on the habit and preference of certain developer.
+not real bugs. Arguments for these claims were stemming from an
+opinion that the D-Bus interface of the program is supposed to be an internal API, and
+therefore not necessary to be robust and handle any input. In other cases, the
+findings were acknowledged as bugs and promptly fixed. In our opinion, this
+witnesses the adoption of D-Bus communication usage in modern GNU/Linux
+desktop is not mature enough to have widely accepted best practices. The
+decision about the realistic need to sanitize inputs received via D-Bus is usually not done at all, but depends on the habit and preference of certain developer.
 
 
 We argue that we cannot speak of an internal API for applications receiving
@@ -995,8 +993,10 @@ like GNOME Shell or systemd. Not sanitizing inputs means reliance that the
 other side of the communication behaves nicely and provides just the expected
 range of arguments. The problem is that any program, not just the one expected,
 having access to the appropriate message bus (so these problems generally does
-not have security implications, as there is no way to elevate privileges this
-way) may attempt to communicate with the other program listening on that bus.
+not have severe security implications, as there is no way to elevate privileges
+this way, just create a denial of service locally in a context where you may
+terminate the service directly) may attempt to communicate with the other
+program listening on that bus.
 These programs may, by poor programming or by malice, supply any value
 permitted by the expected data type as an argument.  When the receiving program
 does not do proper validation, a well-known situation happens where dirty data
@@ -1029,7 +1029,9 @@ more complex data types. We also plan to enhance the tool to fuzz D-Bus
 signals, exposing the additional input vectors of programs using D-Bus to
 unexpected data.  \textsc{Dfuzzer} is fully automated, which allows an easy
 deployment and usage.  We plan to deploy it for testing all programs in the
-Fedora GNU/Linux distribution, which use D-Bus for communication.
+Fedora GNU/Linux distribution, which use D-Bus for communication. As oppposed to
+Red Hat Enterprise Linux distribution focused on servers, Fedora contains many
+additional modern desktop applications providing services via D-Bus.
 
 \addtodo{Fix bibs}
 
