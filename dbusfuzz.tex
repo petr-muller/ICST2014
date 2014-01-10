@@ -830,12 +830,12 @@ state using D-Bus messages with known and valid messages.
 
 \subsection{Project details}
 \textsc{Dfuzzer} is written in C language. The source code is publicly
-available\footnote{https://github.com/matusmarhefka/dfuzzer} under the GNU GPLv3 license.
-The initial work on the project was performed as a part of a bachelor thesis
-in cooperation of Red Hat Czech and Faculty of Information Technology, Brno
+available\footnote{\url{https://github.com/matusmarhefka/dfuzzer}} under the GNU
+GPLv3 license. The initial work on the project was performed as a part of a bachelor
+thesis in cooperation of Red Hat Czech and Faculty of Information Technology, Brno
 University of Technology.
 
-The tool uses two important external libraries:\texttt{libffi} and
+The tool uses two important external libraries: \texttt{libffi} and
 \texttt{GLib2}. \texttt{Libffi} is a foreign function interface library. It
 provides a pointer to a function that can accept and decode any combination of
 arguments defined at runtime.  \texttt{GLib2} is the low-level core library
@@ -847,11 +847,41 @@ use the high-level advantages of GDBus binding and data types from
 \texttt{Glib2}.
 
 \subsection{Related work}
-\addtodo{BendyBus:
-\url{http://tecnocode.co.uk/2012/01/19/all-aboard-the-bendy-bus/}}
-\addtodo{DBus fuzzer:
-\url{https://chromium.googlesource.com/chromiumos/platform/dbusfuzz/+/master/dbusfuzz.py}}
-\addtodo{None but a crude unused project, but we have to write something}
+BendyBus\footnote{\url{http://tecnocode.co.uk/2012/01/19/all-aboard-the-bendy-bus/}}
+is an another fuzzing tool for fuzz testing applications. Dfuzzer is fuzz
+testing services (basically servers) and is acting like a client application.
+In contrast with Dfuzzer, BendyBus simulates a D-Bus service by providing its
+interfaces and methods and let applications to communicate with it. It targets
+the client applications and so its purpose is different as the purpose of Dfuzzer.
+
+Dbusfuzz\footnote{\url{https://chromium.googlesource.com/chromiumos/platform/dbusfuzz/+/master/dbusfuzz.py}} is a D-Bus fuzzer implemented in Python by Google. Basically it does
+the same thing as Dfuzzer. Its target is also fuzzing of services and comparsion
+of the two tools can be seen in table \ref{tab:differences}.
+
+\FloatBarrier
+\begin{table}[!h]
+\caption{Differences between Dfuzzer and Dbusfuzz}
+\label{tab:differences}
+\begin{center}
+	\begin{tabular}{|l|c|c|}
+	\hline
+	\textbf{Property} & \textbf{Dfuzzer} & \textbf{Dbusfuzz} \\ \hline \hline
+	Language & C with GLib2 & Python \\ \hline
+	Error messages & human readable errors & python tracebacks \\ \hline
+	Configurability & bus name, object path, & bus name, object path, \\
+		(what can be & interface and method & interface, method \\
+		specified) & & and its arguments\\ \hline
+	Continue on crash & yes & no \\ \hline
+	Possibility to specify & only string arguments & \\
+		method arguments & in global array & yes \\ \hline
+	\end{tabular}
+\end{center}
+\end{table}
+\FloatBarrier
+
+Dfuzzer can also auto test all of bus name objects, interfaces and methods.
+Dbusfuzz can do this too, but everything must be specified in fuzz plan file
+in YAML format, including all methods arguments initial values.
 
 
 \section{Results}
