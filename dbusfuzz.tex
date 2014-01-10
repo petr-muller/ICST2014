@@ -1070,6 +1070,25 @@ deployment and usage.  We plan to deploy it for testing all programs in the
 Fedora GNU/Linux distribution, which use D-Bus for communication.
 
 
+\appendix
+Live demonstration plan:
+\begin{itemize}
+	\item Detection of running services on both buses
+		\begin{itemize}
+			\item use of Dfuzzer to inspect what is on the bus daemons
+		\end{itemize}
+	\item Demonstrate detection of crashes and memory leaks
+		\begin{itemize}
+			\item run Dfuzzer against some sensitive application
+			\item comment on the output
+		\end{itemize}
+	\item Reproduce one of more serious issues detected by Dfuzzer
+		\begin{itemize}
+			\item foo
+		\end{itemize}
+\end{itemize}
+
+
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
 % adjust value as needed - may need to be readjusted if
