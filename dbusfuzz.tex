@@ -1070,25 +1070,6 @@ deployment and usage.  We plan to deploy it for testing all programs in the
 Fedora GNU/Linux distribution, which use D-Bus for communication.
 
 
-\appendix
-Live demonstration plan:
-\begin{itemize}
-	\item Detection of running services on both buses
-		\begin{itemize}
-			\item use of Dfuzzer to inspect what is on the bus daemons
-		\end{itemize}
-	\item Demonstrate detection of crashes and memory leaks
-		\begin{itemize}
-			\item run Dfuzzer against some sensitive application
-			\item comment on the output
-		\end{itemize}
-	\item Reproduce one of more serious issues detected by Dfuzzer
-		\begin{itemize}
-			\item foo
-		\end{itemize}
-\end{itemize}
-
-
 % trigger a \newpage just before the given reference
 % number - used to balance the columns on the last page
 % adjust value as needed - may need to be readjusted if
@@ -1142,7 +1123,29 @@ Study of the Reliability of UNIX Utilities}. Communications of the ACM 33, 12
 (December 1990)
 
 \end{thebibliography}
+
+\appendix
+\section{Live demonstration plan}
+\begin{itemize}
+	\item D-Bus introspection
+		\begin{itemize}
+			\item Overview of running D-Bus infrastructure
+			\item Details of running services
+			\item Use DFuzzer's ability to discover different interfaces, objects and
+			methods
+		\end{itemize}
+	\item Demonstrate fuzz testing of the D-Bus service
+		\begin{itemize}
+			\item Run in fully automated mode, discovering every testable method
+			\item Show limiting to certain elements on the bus
+			\item Show detection of a service crashing on an input
+			\item Show detection of a service leaking memory
+		\end{itemize}
+	\item Demonstrate detection scripts
+		\begin{itemize}
+			\item Enhance DFuzzer with custom detection scriptb
+			\item Show this enhancement in action
+		\end{itemize}
+\end{itemize}
 % that's all folks
 \end{document}
-
-
