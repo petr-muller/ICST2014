@@ -417,7 +417,7 @@ callers.
 This structure means the D-Bus communicating programs are a good target for
 fuzz testing, which is well-suited for detecting bugs stemming from improper
 validation of input data. Fuzz testing (or simply fuzzing) is a~well-known type
-of~testing~\cite{miller90-fuzz}: it it an automated, brute force, black-box
+of~testing~\cite{miller90-fuzz}: it is an automated, brute force, black-box
 technique, exploiting the~fact that many bugs in~software are caused
 by~handling inputs without applying proper validation routines on~those.
 Fuzzing is close to~the~boundary value analysis, where test values are created
@@ -689,7 +689,7 @@ daemon. Process status file is also used for~monitoring an~application process
 memory usage in order to detect memory leaks after processing a message.
 
 
-Additionally, the user can specify additional data to be used as arguments
+Additionally, the user can specify string data to be used as arguments
 during the testing. This allows to re-use interesting inputs proven to be useful
 from different testing rounds. We are planning to add a possibility to mutate
 such provided data to discover new, possibly interesting test-cases.
@@ -798,15 +798,15 @@ about this limit.
 \subsection{\textsc{Dfuzzer} usage}
 \textsc{Dfuzzer} is a command-line tool taking options as arguments for setting-up fuzz
 testing of a chosen application. \textsc{Dfuzzer} is fuzz testing only processes
-with~well-known names on~the~session bus daemon. This means it needs to~own
-only a~unique name within~the~session bus.
+with~well-known names on~the~bus daemons. This means it needs to~own
+only a~unique name within~the~buses.
 
 
 By default, \textsc{Dfuzzer} runs in its most general and automated way, where
-it automatically discovers all services with well-known names on both message
-buses available, and tests everything. Using command-line options, the user can
-limit the scope to a certain interface, object or just method, although not to
-a single bus.
+it automatically traverses through all of~specified bus name objects, interfaces
+and methods on both message buses available, and tests everything. Using
+command-line options, the user can limit the scope to a certain object,
+interface or just method, although not to a single bus.
 
 
 It is also possible to suppress testing of certain elements in the system,
@@ -889,11 +889,10 @@ tools is present in Table \ref{tab:differences}.
 	Fuzzing approach & generation & mutation \\ \hline
 	Interface discovery & yes & no \\ \hline
 	Continue on crash & yes & no \\ \hline
-	Configurability & bus, interface & bus, interface  \\
-	 & object, method & object, method \\
-	 & strings arguments & all arguments \\ \hline
+	Configurability & bus, object, & bus, object,  \\
+	 & interface, method, & interface, method, \\
+	 & string arguments & all arguments \\ \hline
 	Error messages & Human readable errors & Python tracebacks \\ \hline
- 
 	\end{tabular}
 \end{center}
 \end{table}
@@ -917,7 +916,7 @@ which tests D-Bus services (which are similar to servers), BendyBus targets
 users/clients of these services. BendyBus simulates a D-Bus service by mocking
 its interfaces and methods, and responds to clients with fuzzed messages. It
 targets the client applications and so its purpose is different from the
-purpose of \textsc{Dfuzzer}. In full testing of whole D-Bus eco-system in a
+purpose of \textsc{Dfuzzer}. In full testing of whole D-Bus eco-system in an
 operating system distribution, \textsc{Dfuzzer} and BendyBus might complement each other nicely.
 
 \section{Results}
@@ -1092,6 +1091,7 @@ Fedora GNU/Linux distribution, which use D-Bus for communication.
 % <OR> manually copy in the resultant .bbl file
 % set second argument of \begin to the number of references
 % (used to reserve space for the reference number labels box)
+\newpage
 \begin{thebibliography}{1}
 
 \bibitem{sutton07-book}
@@ -1125,7 +1125,7 @@ Study of the Reliability of UNIX Utilities}. Communications of the ACM 33, 12
 \end{thebibliography}
 
 \appendix
-\section{Live demonstration plan}
+Live demonstration plan:
 \begin{itemize}
 	\item D-Bus introspection
 		\begin{itemize}
