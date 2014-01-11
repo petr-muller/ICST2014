@@ -353,26 +353,28 @@
 
 
 \begin{abstract}
-We present \textsc{Dfuzzer}, a fully automated tool for fuzz testing
-programs communicating via D-Bus. D-Bus is the prevalent modern mechanism for an
-inter-process communication in the GNU/Linux ecosystem. Programs receiving data over
-D-Bus should sanitize the inputs correctly as it may come from any application
-having access to the message bus. Unfortunately, it is often not the case as
-demonstrated by severe bugs found by the presented fuzzing tool.
+We present \textsc{Dfuzzer}, a fully automated tool for fuzz testing programs
+communicating via D-Bus. D-Bus is the prevalent modern mechanism for an
+inter-process communication in the GNU/Linux ecosystem. Programs receiving data
+over D-Bus should sanitize the inputs correctly as it may come from any
+application having access to the message bus. Unfortunately, it is often not
+the case as demonstrated by severe bugs found by the presented fuzzing tool.
 
 \textsc{Dfuzzer} is fully automated: using D-Bus introspection, it is able to
 acquire the structure of the parameters expected by the target program. It can
 then generate ballast data respecting this structure, so the target program
-starts using such data incorrectly if it does not carefully validate it.
-We have found numerous bugs in various parts of the GNU/Linux operating system,
-including \textit{GNOME Shell} and \textit{systemd}. The bugs usually result in crashes, but we
-have found other bugs like memory leaks and even a data-loss bug.
+starts using such data incorrectly if it does not carefully validate it.  We
+have found numerous bugs in various parts of the GNU/Linux operating system,
+including GNOME Shell and \textit{systemd}. The bugs usually result in
+crashes, but we have found other bugs like memory leaks and even a data-loss
+bug.
 
-We also discuss the software engineering aspects of fuzz testing D-Bus services.
-We have met developer opinions that the problems found do not constitute valid bugs, because the D-Bus interface is
-actually an internal API. The discussion is interesting by showing that
-D-Bus usage is not a fully mature area of engineering, and programmers do
-not have a shared understanding of its purpose.
+We also discuss the software engineering aspects of fuzz testing D-Bus
+services.  We have met developer opinions that the problems found do not
+constitute valid bugs, because the D-Bus interface is actually an internal API.
+The discussion is interesting by showing that D-Bus usage is not a fully mature
+area of engineering, and programmers do not have a shared understanding of its
+purpose.
 \end{abstract}
 
 \begin{keywords}
@@ -747,7 +749,7 @@ a~method, a~log is created within~a~method entry. After a~log header there is
 a~message describing an~event which occurred followed by~a~process memory size.
 The~last items in~log are the~inputs on~which an~event occurred and~so
 the~arguments signatures with~the~corresponding values. An~example
-of~the~truncated log file from~fuzz testing the~\emph{GNOME Shell 3.6.3.1}:
+of~the~truncated log file from~fuzz testing GNOME Shell:
 
 
 {
