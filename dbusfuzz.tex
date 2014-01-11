@@ -355,7 +355,7 @@
 \begin{abstract}
 We present \textsc{Dfuzzer}, a fully automated tool for fuzz testing
 programs communicating via D-Bus. D-Bus is the prevalent modern mechanism for an
-inter-process communication in GNU/Linux ecosystem. Programs receiving data over
+inter-process communication in the GNU/Linux ecosystem. Programs receiving data over
 D-Bus should sanitize the inputs correctly as it may come from any application
 having access to the message bus. Unfortunately, it is often not the case as
 demonstrated by severe bugs found by the presented fuzzing tool.
@@ -365,13 +365,13 @@ acquire the structure of the parameters expected by the target program. It can
 then generate ballast data respecting this structure, so the target program
 starts using such data incorrectly if it does not carefully validate it.
 We have found numerous bugs in various parts of the GNU/Linux operating system,
-including GNOME Shell and systemd. The bugs usually result in crashes, but we
-have found other bugs like memory leaks and some data-loss bugs.
+including \textit{GNOME Shell} and \textit{systemd}. The bugs usually result in crashes, but we
+have found other bugs like memory leaks and even a data-loss bug.
 
 We also discuss the software engineering aspects of fuzz testing D-Bus services.
 We have met developer opinions that the problems found do not constitute valid bugs, because the D-Bus interface is
-actually an internal API. The discussion is interesting by showing that the
-D-Bus usage is not a fully mature area of engineering, and the programmers do
+actually an internal API. The discussion is interesting by showing that
+D-Bus usage is not a fully mature area of engineering, and programmers do
 not have a shared understanding of its purpose.
 \end{abstract}
 
@@ -402,8 +402,7 @@ on~demand when their services are needed}''~\cite{dbus}.
 
 Recently, D-Bus has become important part of~almost all GNU/Linux
 distributions. There is an increasing number of applications which use it
-for~IPC, including key system parts like \textit{systemd} service manager. The
-growing importance is witnessed by the recent inclusion of the D-Bus message bus directly into the Linux kernel
+for~IPC, including key system parts like \textit{systemd} service manager. Its growing importance is witnessed by the recent inclusion of the D-Bus message bus directly into the Linux kernel
 upstream.
 
 Applications communicating via D-Bus either provide interfaces which contain callable
@@ -889,8 +888,8 @@ tools is present in Table \ref{tab:differences}.
 	Fuzzing approach & generation & mutation \\ \hline
 	Interface discovery & yes & no \\ \hline
 	Continue on crash & yes & no \\ \hline
-	Configurability & bus, object, & bus, object,  \\
-	 & interface, method, & interface, method, \\
+	& bus, object, & bus, object,  \\
+	 Configurability & interface, method, & interface, method, \\
 	 & string arguments & all arguments \\ \hline
 	Error messages & Human readable errors & Python tracebacks \\ \hline
 	\end{tabular}
@@ -916,7 +915,7 @@ which tests D-Bus services (which are similar to servers), BendyBus targets
 users/clients of these services. BendyBus simulates a D-Bus service by mocking
 its interfaces and methods, and responds to clients with fuzzed messages. It
 targets the client applications and so its purpose is different from the
-purpose of \textsc{Dfuzzer}. In full testing of whole D-Bus eco-system in an
+purpose of \textsc{Dfuzzer}. In full testing of whole D-Bus ecosystem in an
 operating system distribution, \textsc{Dfuzzer} and BendyBus might complement each other nicely.
 
 \section{Results}
@@ -1060,7 +1059,7 @@ interface to any program running on the system, and therefore should validate
 received data in the same way as they should validate any other generally
 untrusted input. In our deployment of the tool, we found that many programs are
 not properly doing this, resulting in crashes, memory leaks and unintended
-behavior defects. \textsc{Dfuzzer} is able to expose these bugs.  In the
+behavior defects.\newpage\textsc{Dfuzzer} is able to expose these bugs.  In the
 future, we plan to extend \textsc{Dfuzzer} to be able to generate even data of
 more complex data types. We also plan to enhance the tool to fuzz D-Bus
 signals, exposing the additional input vectors of programs using D-Bus to
@@ -1091,7 +1090,6 @@ Fedora GNU/Linux distribution, which use D-Bus for communication.
 % <OR> manually copy in the resultant .bbl file
 % set second argument of \begin to the number of references
 % (used to reserve space for the reference number labels box)
-\newpage
 \begin{thebibliography}{1}
 
 \bibitem{sutton07-book}
@@ -1099,13 +1097,12 @@ Michael~Sutton, Adam~Greene and Pedram~Amini. \emph{Fuzzing: Brute Force
 Vulnerability Discovery}, Addison-Wesley Professional, 2007.
 
 \bibitem{takanen08-book}
-Ari~Takanen and Jared~DeMott and Charlie~Miller. \emph{Fuzzing for~Software
+Ari~Takanen, Jared~DeMott and Charlie~Miller. \emph{Fuzzing for~Software
 Security Testing and~Quality Assurance}, Artech House Print on~Demand, 2008.
 
 \bibitem{dbus}
-Red Hat and the community. \emph{Software/dbus [online]}, freedesktop.org,
-2012-08-24 [cit. 2014-10-01],
-\url{http://www.freedesktop.org/wiki/Software/dbus}
+Havoc Pennington, Anders Carlsson, Alexander Larsson, Sven Herzberg, Simon McVittie and David Zeuthen. \emph{D-Bus specification}, freedesktop.org,
+2014, rev. 0.23
 
 \bibitem{regehr11-compfuzz}
 Xuejun Yang, Yang Chen, Eric Eide, and John Regehr. \emph{Finding and
@@ -1124,8 +1121,9 @@ Study of the Reliability of UNIX Utilities}. Communications of the ACM 33, 12
 
 \end{thebibliography}
 
-\appendix
-Live demonstration plan:
+\begin{appendices}
+
+  \section{Live demonstration plan:}
 \begin{itemize}
 	\item D-Bus introspection
 		\begin{itemize}
@@ -1147,5 +1145,6 @@ Live demonstration plan:
 			\item Show this enhancement in action
 		\end{itemize}
 \end{itemize}
+\end{appendices}
 % that's all folks
 \end{document}
